@@ -1,0 +1,16 @@
+import {setTimeout as delay} from 'node:timers/promises';
+const [action,base,id,...words]=process.argv.slice(2);
+// Keep the existing API and legacy CLI alias; new requests use begin to avoid
+// Codex on Windows mistaking a start argument plus a URL for Start-Process.
+const command=action==='begin'?'start':action;
+if(!['start','status','progress','complete','fail'].includes(command)||!base||!id)throw Error('Usage: node scripts/agent-session.mjs begin|status|progress|complete|fail http://127.0.0.1:8766 REQUEST_ID [message] (legacy alias: start)');
+const url=new URL(base);
+if(url.protocol!=='http:'||!['127.0.0.1','localhost'].includes(url.hostname)||url.username||url.password)throw Error('ローカルのアバターキットURLを指定してください。');
+async function request(route,data){const response=await fetch(new URL(route,url),data?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{});const result=await response.json();if(!response.ok)throw Error(result.error);return result;}
+let state=await request(command==='status'?'/api/session':'/api/session/'+command,command==='status'?undefined:{id,message:words.join(' ')});
+if(command==='start'){
+ const deadline=Date.now()+35000;
+ while(state.request?.id===id&&state.request.status==='syncing'&&Date.now()<deadline){await delay(800);state=await request('/api/session');}
+ if(state.request?.id!==id||state.request.status!=='running')throw Error(state.request?.error||'アプリの最新状態を保存できませんでした。アプリを開いて依頼し直してください。');
+ console.log(JSON.stringify({saved:true,task:state.request.kind,project:state.request.path,directory:state.request.directory,instructions:state.request.directory+'/AGENTS.md',appRoot:state.appRoot},null,2));
+}else console.log(JSON.stringify(state,null,2));

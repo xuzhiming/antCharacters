@@ -1,0 +1,4 @@
+interface:
+  display_name: "Refine expressions into a cute finish"
+  short_description: "Edit while viewing Blender, comparing and adjusting the look until it matches the reference"
+  default_prompt: "Use $avatar-expression-authoring to edit while viewing Blender and finish clean, cute eye, mouth and brow expressions that match the reference."

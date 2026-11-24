@@ -1,0 +1,294 @@
+"""Register reviewed bone chains, retain a terminal joint, and audit mesh bindings.
+
+Blender --background character.blend --disable-autoexec --python-exit-code 1
+  --python spring-setup.py -- setup plan.json character.blend spring-plan.json
+or: -- audit report.json
+Geometry/weights are authored after visual review; this tool never guesses parts.
+"""
+import hashlib
+import json
+import math
+from pathlib import Path
+import sys
+
+import bpy
+from mathutils import Vector
+
+KEY = 'charakit_spring_plan_v1'
+
+
+def enable_vrm():
+    if hasattr(bpy.types.Armature, 'vrm_addon_extension'):
+        return
+    import addon_utils
+    for module in addon_utils.modules():
+        if module.bl_info.get('name') == 'VRM format':
+            bpy.ops.preferences.addon_enable(module=module.__name__)
+            return
+    raise ValueError('Enable the VRM Add-on.')
+
+
+def finite(value, minimum=0, maximum=math.inf):
+    return isinstance(value, (float, int)) and math.isfinite(value) and minimum <= value <= maximum
+
+
+def meshes_for_rig(rig):
+    return [o for o in bpy.context.scene.objects if o.type == 'MESH' and
+            (o.find_armature() == rig or any(m.type == 'ARMATURE' and m.object == rig for m in o.modifiers))]
+
+
+def is_hair(obj):
+    while obj:
+        if obj.get('charakitRole') == 'hair':
+            return True
+        obj = obj.parent
+    return False
+
+
+def audit(rig, meshes=None):
+    """Audit actual Blender data. A named Spring mesh or normalized sum isn't proof."""
+    plan = json.loads(rig.get(KEY, 'null'))
+    if not plan or plan.get('version') != 1 or not isinstance(plan.get('targets'), list):
+        raise ValueError('Register the spring plan for all target parts using spring-setup.py.')
+    meshes = list(meshes) if meshes is not None else list({o.name:o for o in [*meshes_for_rig(rig),
+        *(o for o in bpy.context.scene.objects if o.type == 'MESH' and is_hair(o) and not o.hide_render),
+        *(bpy.data.objects[t['mesh']] for t in plan['targets'] if t.get('mesh') in bpy.data.objects)]}.values())
+    names = {o.name: o for o in meshes}
+    springs = rig.data.vrm_addon_extension.spring_bone1.springs
+    chains = {}
+    occupied = set()
+    for spring in springs:
+        bones = [j.node.bone_name for j in spring.joints]
+        if len(bones) < 2 or any(b not in rig.data.bones for b in bones):
+            raise ValueError(spring.vrm_name + ': a valid bone chain that includes the terminal is required.')
+        if spring.vrm_name in chains:
+            raise ValueError('Chain names are duplicated.')
+        for i, name in enumerate(bones):
+            if name in occupied:
+                raise ValueError(name + ': spring bone is duplicated.')
+            occupied.add(name)
+            if i and rig.data.bones[bones[i-1]] not in rig.data.bones[name].parent_recursive:
+                raise ValueError(name + ': spring bone parent-child relationship is invalid.')
+            if i and (rig.data.bones[name].head_local-rig.data.bones[bones[i-1]].head_local).length < 1e-7:
+                raise ValueError(name + ': spring bone length is zero.')
+            joint = spring.joints[i]
+            if not (finite(joint.stiffness) and finite(joint.gravity_power) and
+                    finite(joint.drag_force, maximum=1) and finite(joint.hit_radius)):
+                raise ValueError(name + ': physics parameters are invalid.')
+        center = spring.center.bone_name
+        if center and (center not in rig.data.bones or
+                       (center != bones[0] and rig.data.bones[center] not in rig.data.bones[bones[0]].parent_recursive)):
+            raise ValueError(spring.vrm_name + ': center is not an ancestor of the root bone.')
+        groups = rig.data.vrm_addon_extension.spring_bone1.collider_groups
+        if any((not ref.collider_group_uuid or ref.collider_group_uuid not in {g.uuid for g in groups})
+               if hasattr(ref, 'collider_group_uuid') else
+               (not ref.collider_group_name or ref.collider_group_name not in {g.name for g in groups})
+               for ref in spring.collider_groups):
+            raise ValueError(spring.vrm_name + ': collider group is missing.')
+        # Include skipped ancestors, which also rotate in the exported chain.
+        effective = set(bones[:-1])
+        for a, b in zip(bones, bones[1:]):
+            parent = rig.data.bones[b].parent
+            while parent and parent.name != a:
+                if parent.name in occupied:
+                    raise ValueError(parent.name + ': spring bone path is duplicated.')
+                occupied.add(parent.name)
+                effective.add(parent.name)
+                parent = parent.parent
+        chains[spring.vrm_name] = effective
+    results = []
+    seen = set()
+    for target in plan['targets']:
+        name = target['mesh']
+        if name in seen or name not in names:
+            raise ValueError(name + ': target mesh is missing or duplicated.')
+        seen.add(name)
+        obj = names[name]
+        if target.get('mode') == 'fixed':
+            if not target.get('reason', '').strip():
+                raise ValueError(name + ': a reason for fixing is required.')
+            results.append(dict(mesh=name, mode='fixed', reason=target['reason']))
+            continue
+        if target.get('mode') != 'spring' or not target.get('chains'):
+            raise ValueError(name + ': specify the spring bones.')
+        if obj.find_armature() != rig:
+            raise ValueError(name + ': not bound to the target rig.')
+        if not any(m.type == 'ARMATURE' and m.object == rig and m.use_vertex_groups and m.show_viewport and m.show_render for m in obj.modifiers):
+            raise ValueError(name + ': there is no enabled Armature modifier that uses vertex groups.')
+        for label in target['chains']:
+            if label not in chains:
+                raise ValueError(name + ': chain is not registered: ' + label)
+            # The weights can use a descendant (including the tail), provided
+            # that a rotating ancestor affects it. Ignore non-deforming groups.
+            effective = {b.name for b in rig.data.bones if b.use_deform and
+                         (b.name in chains[label] or any(p.name in chains[label] for p in b.parent_recursive))}
+            groups = {g.index for g in obj.vertex_groups if g.name in effective}
+            affected = sum(any(g.group in groups and g.weight > 1e-5 for g in v.groups) for v in obj.data.vertices)
+            if not affected:
+                raise ValueError(name + ': no vertices follow the spring bone: ' + label)
+            results.append(dict(mesh=name, chain=label, affectedVertices=affected))
+    pending = [o.name for o in meshes if (o.get('pendingSpringSetup') or is_hair(o)) and o.name not in seen]
+    if pending:
+        raise ValueError('Spring setup has not been reviewed: ' + ', '.join(pending))
+    return dict(version=1, plan=plan, chains=len(chains), targets=results)
+
+
+def update_centers(config):
+    """Change only explicit spring centers; retain joints, weights and settings."""
+    enable_vrm()
+    rig = bpy.data.objects.get(config.get('armature', ''))
+    if not rig or rig.type != 'ARMATURE':
+        raise ValueError('Specify the actual rig name.')
+    centers = config.get('centers')
+    if not isinstance(centers, dict) or not centers:
+        raise ValueError('Specify the chain names to change and their center explicitly.')
+    audit(rig)
+    springs = {s.vrm_name: s for s in rig.data.vrm_addon_extension.spring_bone1.springs}
+    for name, center in centers.items():
+        if name not in springs or (center is not None and not isinstance(center, str)):
+            raise ValueError('Specify an existing chain name and a center bone name, or null.')
+        root = rig.data.bones[springs[name].joints[0].node.bone_name]
+        if center and (center not in rig.data.bones or
+                       (center != root.name and rig.data.bones[center] not in root.parent_recursive)):
+            raise ValueError('Specify the root or one of its ancestors as center.')
+    changes = []
+    for name, center in centers.items():
+        spring = springs[name]
+        previous = spring.center.bone_name
+        spring.center.bone_name = center or ''
+        changes.append(dict(chain=name, before=previous or None, after=center or None))
+    bpy.context.view_layer.update()
+    report = audit(rig)
+    report['centerChanges'] = changes
+    return report
+
+
+def setup(config):
+    """Use exact, visually reviewed bone/mesh names; preserve existing rest/skin."""
+    enable_vrm()
+    rig = bpy.data.objects.get(config.get('armature', ''))
+    if not rig or rig.type != 'ARMATURE':
+        raise ValueError('Specify the actual rig name.')
+    entries = config.get('chains')
+    targets = config.get('targets')
+    if not isinstance(entries, list) or not isinstance(targets, list):
+        raise ValueError('Specify chains and targets explicitly. Also state explicitly when there are no targets.')
+    sb = rig.data.vrm_addon_extension.spring_bone1
+    existing = {s.vrm_name for s in sb.springs}
+    labels = [c.get('name') for c in entries]
+    if len(set(labels)) != len(labels) or any(not n for n in labels):
+        raise ValueError('Specify unique chain names.')
+    seen_targets = set()
+    for t in targets:
+        name = t.get('mesh')
+        if name in seen_targets or name not in bpy.data.objects or bpy.data.objects[name].type != 'MESH' or not isinstance(t.get('source'), str) or not t['source']:
+            raise ValueError('Specify a unique target mesh and source part name.')
+        seen_targets.add(name)
+        if t.get('mode') == 'spring':
+            if not isinstance(t.get('chains'), list) or not t['chains'] or any(c not in existing.union(labels) for c in t['chains']):
+                raise ValueError(name + ': specify a valid chain name.')
+        elif t.get('mode') != 'fixed' or not isinstance(t.get('reason'), str) or not t['reason'].strip():
+            raise ValueError(name + ': specify a reason for fixing.')
+    humanoid = {h.node.bone_name for h in rig.data.vrm_addon_extension.vrm1.humanoid.human_bones.human_bone_name_to_human_bone().values() if h.node.bone_name}
+    all_bones = set()
+    # Validate the full plan before making any changes to the scene.
+    for c in entries:
+        bones = c.get('bones')
+        if not isinstance(bones, list) or not bones or any(n not in rig.data.bones for n in bones):
+            raise ValueError('Specify the spring bone chain created from observation.')
+        if all_bones.intersection(bones) or len(set(bones)) != len(bones) or humanoid.intersection(bones):
+            raise ValueError('Do not duplicate spring bones and do not use full-body Humanoid bones.')
+        all_bones.update(bones)
+        end_name = bones[-1] + '_CharakitEnd'
+        if not c.get('includesTerminal', False) and end_name in rig.data.bones:
+            end = rig.data.bones[end_name]
+            if not end.parent or end.parent.name != bones[-1] or end.use_deform:
+                raise ValueError(end_name + ': the existing terminal name is already used by another bone.')
+        for a, b in zip(bones, bones[1:]):
+            if rig.data.bones[a] not in rig.data.bones[b].parent_recursive:
+                raise ValueError('Check the parent-child relationship of the spring bone chain.')
+        for key, default, maximum in [('stiffness', 1, math.inf), ('gravityPower', .15, math.inf), ('dragForce', .4, 1), ('hitRadius', .01, math.inf)]:
+            if not finite(c.get(key, default), maximum=maximum):
+                raise ValueError('Check the physics parameter: ' + key)
+        direction = c.get('gravityDir', [0, 0, -1])
+        if len(direction) != 3 or not all(math.isfinite(v) for v in direction) or Vector(direction).length < 1e-7:
+            raise ValueError('Check gravityDir.')
+        center = c.get('center')
+        if center and (center not in rig.data.bones or
+                       (center != bones[0] and rig.data.bones[center] not in rig.data.bones[bones[0]].parent_recursive)):
+            raise ValueError('Specify the root or one of its ancestors as center.')
+        if any(g not in {g.vrm_name for g in sb.collider_groups} for g in c.get('colliderGroups', [])):
+            raise ValueError('Create the required collider groups first.')
+    bpy.ops.object.select_all(action='DESELECT')
+    rig.hide_set(False)
+    rig.select_set(True)
+    bpy.context.view_layer.objects.active = rig
+    for c in entries:
+        # Add only a terminal endpoint. Never change existing rest bones or weights.
+        bones = list(c['bones'])
+        if not c.get('includesTerminal', False):
+            last = rig.data.bones[bones[-1]]
+            end_name = bones[-1] + '_CharakitEnd'
+            if end_name not in rig.data.bones:
+                bpy.ops.object.mode_set(mode='EDIT')
+                parent = rig.data.edit_bones[bones[-1]]
+                end = rig.data.edit_bones.new(end_name)
+                end.head = parent.tail
+                end.tail = end.head + (parent.tail-parent.head).normalized()*.01
+                end.parent = parent
+                end.use_connect = True
+                end.use_deform = False
+                bpy.ops.object.mode_set(mode='OBJECT')
+            bones.append(end_name)
+        for i in reversed(range(len(sb.springs))):
+            if sb.springs[i].vrm_name == c['name']:
+                sb.springs.remove(i)
+        spring = sb.springs.add()
+        spring.vrm_name = c['name']
+        if c.get('center'):
+            spring.center.bone_name = c['center']
+        for name in bones:
+            j = spring.joints.add()
+            j.node.bone_name = name
+            j.stiffness = c.get('stiffness', 1)
+            j.gravity_power = c.get('gravityPower', .15)
+            j.gravity_dir = c.get('gravityDir', [0, 0, -1])
+            j.drag_force = c.get('dragForce', .4)
+            j.hit_radius = c.get('hitRadius', .01)
+        for name in c.get('colliderGroups', []):
+            ref = spring.collider_groups.add()
+            group = next(g for g in sb.collider_groups if g.vrm_name == name)
+            if hasattr(ref, 'collider_group_uuid'):
+                ref.collider_group_uuid = group.uuid
+            else:
+                ref.collider_group_name = group.name
+    rig[KEY] = json.dumps(dict(version=1, targets=targets), ensure_ascii=False)
+    bpy.context.view_layer.update()
+    report = audit(rig)
+    for target in targets:
+        bpy.data.objects[target['mesh']]['pendingSpringSetup'] = False
+    return report
+
+
+if __name__ == '__main__':
+    args = sys.argv[sys.argv.index('--')+1:]
+    if args[0] in ('setup', 'update-centers'):
+        config = json.loads(Path(args[1]).read_text(encoding='utf-8'))
+        report = setup(config) if args[0] == 'setup' else update_centers(config)
+        out = Path(args[2]).resolve()
+        out.parent.mkdir(parents=True, exist_ok=True)
+        result = bpy.ops.wm.save_as_mainfile(filepath=str(out), copy=True)
+        if 'FINISHED' not in result:
+            raise RuntimeError('Failed to save the Blend file.')
+        Path(args[3]).write_text(json.dumps(report['plan'] if args[0] == 'setup' else report, ensure_ascii=False, indent=2), encoding='utf-8')
+    elif args[0] == 'audit':
+        enable_vrm()
+        rigs = [o for o in bpy.context.scene.objects if o.type == 'ARMATURE' and KEY in o]
+        if len(rigs) != 1:
+            raise ValueError('Register the spring plan to be verified on a single rig.')
+        report = audit(rigs[0])
+        report['blendHash'] = hashlib.sha256(Path(bpy.data.filepath).read_bytes()).hexdigest()
+        Path(args[1]).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+    else:
+        raise ValueError('Specify setup, update-centers, or audit.')
+    print('CHARAKIT_SPRINGS_OK ' + json.dumps(report, ensure_ascii=False))

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tripo Studioモデル取得"
+  short_description: "通常ExportのFBXを実ファイルで確認し、同じ制作フォルダへ受け取る"
+  default_prompt: "$tripo-studio-downloadで、Tripo Studioの対象モデルをFBXとして取得・検査してください。"

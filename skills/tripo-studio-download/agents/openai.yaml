@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tripo Studio model download"
+  short_description: "Verify the normal Export FBX as a real file and receive it into the same production folder"
+  default_prompt: "With $tripo-studio-download, download and check the target Tripo Studio model as FBX."

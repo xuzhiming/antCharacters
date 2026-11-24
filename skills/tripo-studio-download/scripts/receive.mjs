@@ -1,0 +1,166 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {constants} from 'node:fs';
+import {createHash, randomUUID} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+
+const uuid = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+const labelPattern = /^[a-z0-9][a-z0-9_-]{0,40}$/;
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+const signature = stat => [stat.size, stat.mtimeMs, stat.ctimeMs, stat.ino].join(':');
+async function statOrMissing(filename) {
+  try { return await fs.lstat(filename); }
+  catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+}
+async function regular(filename) {
+  const stat = await fs.lstat(filename);
+  if (!stat.isFile() || stat.isSymbolicLink()) throw Error('Not a regular file: ' + filename);
+  return stat;
+}
+async function directory(filename) {
+  const stat = await fs.lstat(filename);
+  if (!stat.isDirectory() || stat.isSymbolicLink()) throw Error('Not a regular directory: ' + filename);
+  return fs.realpath(filename);
+}
+function names({id, modelId, label}) {
+  if (!uuid.test(id) || !uuid.test(modelId) || !labelPattern.test(label)) throw Error('Invalid model ID, usage label, or retrieval ID.');
+  const exportName = label + '-' + modelId.slice(0, 8) + '-' + id;
+  return {exportName, filename: exportName + '.fbx'};
+}
+function paths(job) {
+  const output = path.join(job.work, 'tripo-downloads');
+  return {
+    output,
+    job: path.join(output, '.download-' + job.id + '.json'),
+    source: path.join(job.downloads, job.filename),
+    path: path.join(output, job.filename),
+  };
+}
+export async function prepare({work, downloads, modelId, label}) {
+  // Explicit roots belong to the browser's PC and the active project's work directory.
+  work = await directory(path.resolve(work));
+  downloads = await directory(path.resolve(downloads));
+  const job = {version: 1, id: randomUUID(), modelId, label, work, downloads, preparedAt: Date.now(), format: 'fbx', preset: 'Blender', status: 'prepared'};
+  Object.assign(job, names(job));
+  const p = paths(job);
+  try { await fs.mkdir(p.output); } catch (error) { if (error.code !== 'EEXIST') throw error; }
+  await directory(p.output);
+  for (const file of [p.source, p.source + '.crdownload', p.path]) {
+    if (await statOrMissing(file)) throw Error('The retrieval name conflicts with an existing file: ' + file);
+  }
+  await fs.writeFile(p.job, JSON.stringify(job, null, 2) + '\n', {flag: 'wx'});
+  return {status: 'prepared', job: p.job, modelId, exportName: job.exportName, source: p.source, path: p.path};
+}
+export async function inspectFbx(filename) {
+  await regular(filename);
+  const file = await fs.open(filename, 'r');
+  try {
+    const before = await file.stat();
+    if (before.size < 64) throw Error('The FBX is empty or too small.');
+    const header = Buffer.alloc(Math.min(before.size, 4096));
+    await file.read(header, 0, header.length, 0);
+    const binary = header.subarray(0, 23).equals(Buffer.from('Kaydara FBX Binary  \0\x1a\0', 'binary'));
+    const ascii = /^\s*;\s*FBX\s/i.test(header.toString()) && /FBXHeaderExtension\s*:\s*\{/.test(header.toString());
+    if (!binary && !ascii) throw Error('Cannot verify the FBX header. HTML and ZIP files are not accepted as FBX.');
+    const hash = createHash('sha256');
+    for await (const chunk of file.createReadStream({start: 0, autoClose: false})) hash.update(chunk);
+    const after = await file.stat();
+    if (signature(before) !== signature(after)) return null;
+    return {size: after.size, sha256: hash.digest('hex'), stamp: signature(after)};
+  } finally { await file.close(); }
+}
+async function loadJob(filename) {
+  filename = path.resolve(filename);
+  await regular(filename);
+  const job = JSON.parse(await fs.readFile(filename, 'utf8'));
+  if (job.version !== 1 || job.format !== 'fbx' || job.preset !== 'Blender' ||
+      !Number.isFinite(job.preparedAt) || !['prepared', 'received'].includes(job.status) ||
+      typeof job.work !== 'string' || typeof job.downloads !== 'string') throw Error('The download record is invalid.');
+  const expected = names(job), p = paths(job);
+  if (job.filename !== expected.filename || job.exportName !== expected.exportName ||
+      filename !== p.job || await directory(job.work) !== job.work ||
+      await directory(job.downloads) !== job.downloads) throw Error('The saved location or name in the download record does not match.');
+  await directory(p.output);
+  return {job, p};
+}
+async function writeJob(filename, job) {
+  const temporary = filename + '.' + randomUUID() + '.tmp';
+  try {
+    await fs.writeFile(temporary, JSON.stringify(job, null, 2) + '\n', {flag: 'wx'});
+    await fs.rename(temporary, filename);
+  } finally { await fs.rm(temporary, {force: true}); }
+}
+export async function receive(filename, {timeoutMs = 20000, stableMs = 1000, pollMs = 250} = {}) {
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 0 || timeoutMs > 20000 ||
+      !Number.isInteger(stableMs) || stableMs < 1 || !Number.isInteger(pollMs) || pollMs < 1) throw Error('Invalid wait time. A single wait is limited to 20 seconds.');
+  const {job, p} = await loadJob(filename);
+  if (job.status === 'received') {
+    const current = await inspectFbx(p.path), result = job.result;
+    if (!current || result?.path !== p.path || current.size !== result.size || current.sha256 !== result.sha256) throw Error('The saved FBX does not match the download record.');
+    return result;
+  }
+  if (await statOrMissing(p.path)) throw Error('A file already exists at the destination. It will not be overwritten: ' + p.path);
+  const deadline = Date.now() + timeoutMs;
+  let previous, unchangedSince = 0, reason = 'The specified file has not arrived yet.';
+  do {
+    const stat = await statOrMissing(p.source);
+    if (await statOrMissing(p.source + '.crdownload')) {
+      previous = undefined; reason = '.crdownload is present.';
+    } else if (!stat) {
+      previous = undefined; reason = 'The specified file has not arrived yet.';
+    } else {
+      if (!stat.isFile() || stat.isSymbolicLink()) throw Error('The download is not a regular file.');
+      // Allow the timestamp granularity of local filesystems, but never a previous export.
+      if (stat.mtimeMs < job.preparedAt - 2000) throw Error('This file is older than the start time.');
+      const stamp = signature(stat);
+      if (stamp !== previous) { previous = stamp; unchangedSince = Date.now(); }
+      reason = 'Waiting for the size and modification time to stabilize.';
+      if (Date.now() - unchangedSince >= stableMs) {
+        const checked = await inspectFbx(p.source);
+        if (checked && checked.stamp === signature(await regular(p.source)) &&
+            !await statOrMissing(p.source + '.crdownload')) {
+          await directory(p.output);
+          await fs.copyFile(p.source, p.path, constants.COPYFILE_EXCL);
+          let copied;
+          try {
+            copied = await inspectFbx(p.path);
+            if (!copied || copied.size !== checked.size || copied.sha256 !== checked.sha256 ||
+                checked.stamp !== signature(await regular(p.source)) ||
+                await statOrMissing(p.source + '.crdownload')) throw Error('The FBX changed during the copy.');
+          } catch (error) { await fs.unlink(p.path); throw error; }
+          const result = {status: 'received', modelId: job.modelId, label: job.label, format: job.format, preset: job.preset,
+            source: p.source, path: p.path, size: copied.size, sha256: copied.sha256, receivedAt: new Date().toISOString(),
+            headerVerified: true, meshVerified: false};
+          await writeJob(p.job, {...job, status: 'received', result});
+          return result;
+        }
+        previous = undefined;
+      }
+    }
+    if (Date.now() >= deadline) break;
+    await pause(Math.min(pollMs, deadline - Date.now()));
+  } while (Date.now() <= deadline);
+  return {status: 'pending', job: p.job, modelId: job.modelId, source: p.source, reason};
+}
+async function cli() {
+  const [command, ...args] = process.argv.slice(2), flags = {};
+  const allowed = command === 'prepare' ? ['work', 'downloads', 'model', 'label'] : command === 'receive' ? ['job', 'timeout-ms'] : [];
+  if (!allowed.length) throw Error('Specify prepare or receive.');
+  for (let i = 0; i < args.length; i += 2) {
+    const key = args[i].replace(/^--/, '');
+    if (!args[i].startsWith('--') || !allowed.includes(key) || flags[key] !== undefined || !args[i + 1]) throw Error('Invalid arguments.');
+    flags[key] = args[i + 1];
+  }
+  let result;
+  if (command === 'prepare') {
+    if (!flags.work || !flags.downloads || !flags.model || !flags.label) throw Error('work / downloads / model / label are required.');
+    result = await prepare({work: flags.work, downloads: flags.downloads, modelId: flags.model, label: flags.label});
+  } else {
+    if (!flags.job) throw Error('job is required.');
+    result = await receive(flags.job, {timeoutMs: flags['timeout-ms'] === undefined ? 20000 : Number(flags['timeout-ms'])});
+  }
+  console.log(JSON.stringify(result, null, 2));
+}
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  cli().catch(error => { console.error(JSON.stringify({status: 'error', error: error.message})); process.exitCode = 1; });
+}

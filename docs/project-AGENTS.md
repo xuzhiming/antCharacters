@@ -1,0 +1,17 @@
+# Entry point for this production folder
+
+For shared production knowledge, refer to the **kit's root AGENTS.md** given in the start request. Requirements, stages and checkpoints, Skill selection, saving and resuming, and failure handling are all gathered there. This file does not duplicate the stage instructions.
+
+For requests from the app, treat the project in the output saved by `agent-session.mjs begin` in the request text as the canonical project, and its directory as the production folder. You can find the kit path from the script path in the start request or from appRoot in the local app's session information. Read the kit's root AGENTS.md and the specified Skill, then carry out the requested stage.
+
+In a branch created by the app when candidates are reselected, update the branch-side canonical project given in the start request and preserve the original production folder. Update this folder's project.charakit at the same path, and preserve the source illustration, adopted candidates, work Blend files, and finished products in exports. Do not treat a saved stage name alone as proof that checks passed. Notify completion or interruption with complete or fail from the start request.
+
+Follow avatar-spring-setup for spring setup, and save the per-part plan for all spring parts to work/character.blend. On rig complete, generate the VRM from that Blend and run automated checks on per-part physics response, MToon, and so on. Even when model information is not registered, show the checked VRM in Motion check. Confirm and register the model name, author name, and usage terms in the app's "Export VRM", and save officially while preserving shape, materials, and physics. Do not lose the settings when reloading from FBX. Do not make visual evaluation or visual sign-off a completion criterion; follow the user's explicit requests for fixes.
+
+Match explanations, progress, and completion reports for the user to the language specified in this request. Guide in English for English, Korean for Korean, and Simplified Chinese for Simplified Chinese. Do not change the response language just because the materials or Skills are in Japanese. An explicit change from the user takes precedence. Keep commands, paths, IDs, and the user's asset names and notes in their original form. Do not pin Tripo to the Japanese URL; choose the request language in the existing tab. If it is not supported, open it in English and explain in the request language.
+
+## Additional instructions for expression authoring (expressions)
+
+Follow avatar-expression-authoring for expressions requests. In this stage, to bring the shape toward the target, repeat visual comparison and correction. Do not apply to expression authoring the "do not make visual sign-off a completion criterion" rule from the rig/finish physics checks above. Keep the original, author the needed expressions in work/expression-authoring, and return them to the same canonical project with scripts/expression-studio.py's save and register. Do not present an existing VRM as having expressions. Do not hard-code an individual model's indices or movement amounts into generic code.
+
+The completion criteria for expression authoring are a clean, cute finish that follows the reference. Edit the shape while watching in Computer Use, and keep preparation, camera, keys, capture, and saving short with helper scripts and MCP. Do not make procedural steps, numeric diagnostics, or a successful save the goal of the work. Prefer the bundled Skill for details.

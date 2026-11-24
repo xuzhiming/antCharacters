@@ -1,0 +1,52 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {randomUUID,createHash} from 'node:crypto';
+import {unpackProject} from '../public/project.mjs';
+export const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+async function stageFile(filename,bytes){
+ const target=path.resolve(filename),temp=target+'.'+randomUUID()+'.tmp';
+ await fs.mkdir(path.dirname(target),{recursive:true});
+ try{const h=await fs.open(temp,'wx');try{await h.writeFile(bytes);await h.sync();}finally{await h.close();}return temp;}
+ catch(e){await fs.rm(temp,{force:true}).catch(()=>{});throw e;}
+}
+export async function atomicWrite(filename,bytes){
+ const temp=await stageFile(filename,bytes);
+ try{await fs.rename(temp,path.resolve(filename));}
+ finally{await fs.rm(temp,{force:true}).catch(()=>{});}
+}
+// A lock and a content comparison prevent an old agent from overwriting newer work.
+export async function writeProject(output,bytes,{input,expected,assembly}={}){
+ const target=path.resolve(output),next=await unpackProject(bytes);
+ if(assembly!==undefined&&(!(assembly instanceof Uint8Array)||!assembly.length))throw Error('組み立てBlendの内容を確認してください。');
+ await fs.mkdir(path.dirname(target),{recursive:true});
+ const lock=await fs.open(target+'.lock','wx').catch(e=>{if(e.code==='EEXIST')throw Error('別の更新が実行中です。正本を読み直してください。');throw e;});
+ try{
+  let previous;try{previous=await fs.readFile(target);}catch(e){if(e.code!=='ENOENT')throw e;}
+  if(previous){
+   if(!input||path.resolve(input)!==target)throw Error('別の既存プロジェクトは上書きできません。入力と同じ正本を指定してください。');
+   if(!expected||digest(previous)!==expected)throw Error('正本が更新されています。最新の状態を読み直してください。');
+   if((await unpackProject(previous)).project.id!==next.project.id)throw Error('プロジェクトが一致しません。');
+  }else if(expected)throw Error('更新対象が見つかりません。');
+  if(assembly===undefined)await atomicWrite(target,bytes);
+  else {
+   const blend=path.join(path.dirname(target),'work','assembly.blend'),backup=blend+'.'+randomUUID()+'.bak';
+   await fs.mkdir(path.dirname(blend),{recursive:true});
+   const blendLock=await fs.open(blend+'.lock','wx').catch(e=>{if(e.code==='EEXIST')throw Error('別の組み立て更新が実行中です。');throw e;});
+   let staged,hadBlend=false,installed=false,keepBackup=false;
+   try{
+    staged=await stageFile(blend,assembly);
+    try{await fs.copyFile(blend,backup,fs.constants.COPYFILE_EXCL);hadBlend=true;}catch(e){if(e.code!=='ENOENT')throw e;}
+    await fs.rename(staged,blend);installed=true;
+    await atomicWrite(target,bytes);
+   }catch(error){
+    if(installed)try{if(hadBlend)await fs.rename(backup,blend);else await fs.rm(blend);}
+    catch(rollback){keepBackup=hadBlend;throw new AggregateError([error,rollback],'保存に失敗し、組み立てBlendを復元できませんでした。'+(hadBlend?'以前のBlend: '+backup:''));}
+    throw error;
+   }finally{
+    if(staged)await fs.rm(staged,{force:true}).catch(()=>{});
+    if(!keepBackup)await fs.rm(backup,{force:true}).catch(()=>{});
+    await blendLock.close();await fs.rm(blend+'.lock',{force:true});
+   }
+  }
+ }finally{await lock.close();await fs.rm(target+'.lock',{force:true});}
+}

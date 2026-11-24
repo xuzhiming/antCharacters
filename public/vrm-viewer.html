@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VRM 预览 — anime female</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #0b0d14; color: #e8eaf2; font: 13px/1.5 system-ui, -apple-system, "PingFang SC", sans-serif; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+  .bar { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); display: flex; gap: 8px; padding: 8px; border: 1px solid #2a3042; border-radius: 12px; background: rgba(16,19,28,.86); backdrop-filter: blur(8px); }
+  .bar button { padding: 7px 14px; border: 1px solid #2a3042; border-radius: 8px; background: #171b26; color: #dfe3ee; font: inherit; cursor: pointer; }
+  .bar button.on { border-color: #4f8cff; color: #8fb6ff; background: #121a2c; }
+  .bar button:hover { background: #1d2330; }
+  .hint { position: fixed; left: 18px; top: 16px; color: #8b93a7; font-size: 12px; line-height: 1.7; }
+  .hint b { color: #cfd6e6; font-weight: 600; }
+  #error { position: fixed; inset: 0; display: none; place-items: center; color: #ff9b9b; font-size: 14px; text-align: center; padding: 40px; }
+</style>
+<script src="./preferences.js"></script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/","@pixiv/three-vrm":"./vendor/three-vrm.module.js","@pixiv/three-vrm-animation":"./vendor/three-vrm-animation.module.js"}}</script>
+</head>
+<body>
+<div id="stage"></div>
+<div class="hint">
+  <b id="title">anime female · VRM 预览</b><br>
+  拖拽旋转 · 滚轮缩放 · 右键平移
+</div>
+<div class="bar">
+  <button id="walk" type="button">走路</button>
+  <button id="physics" type="button" class="on">物理 ON</button>
+  <button id="reset" type="button">重置视角</button>
+</div>
+<div id="error"></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/OrbitControls.js';
+import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+import { VRMAnimationLoaderPlugin, createVRMAnimationClip } from '@pixiv/three-vrm-animation';
+
+const requested = new URLSearchParams(location.search).get('model');
+const DEFAULT_MODEL = 'anime_female_tripo_v6.vrm';
+const MODEL = './avatars/' + (requested || DEFAULT_MODEL);
+const WALK = './elyth_base_walk_v1.vrma';
+
+const stage = document.getElementById('stage');
+document.getElementById('title').textContent = (requested || DEFAULT_MODEL) + ' · VRM 预览';
+const errorBox = document.getElementById('error');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.append(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0d14);
+
+const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 60);
+camera.position.set(0, 1.35, 3.4);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.95, 0);
+controls.enableDamping = true;
+controls.minDistance = 0.8;
+controls.maxDistance = 8;
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.6));
+const key = new THREE.DirectionalLight(0xffffff, 2.2);
+key.position.set(1.2, 3, 2.4);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0x88aaff, 1.1);
+rim.position.set(-1.5, 2, -2.5);
+scene.add(rim);
+
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(3, 64),
+  new THREE.MeshStandardMaterial({ color: 0x151a26, roughness: 1, metalness: 0 }),
+);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+const loader = new GLTFLoader();
+loader.register((p) => new VRMLoaderPlugin(p));
+loader.register((p) => new VRMAnimationLoaderPlugin(p));
+
+let vrm = null;
+let mixer = null;
+let walkClip = null;
+let walkOn = false;
+let physicsOn = true;
+const clock = new THREE.Clock();
+
+function resize() {
+  const w = stage.clientWidth || innerWidth;
+  const h = stage.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+resize();
+
+function showError(text) {
+  errorBox.style.display = 'grid';
+  errorBox.textContent = text;
+}
+
+async function load() {
+  try {
+    const gltf = await loader.loadAsync(MODEL);
+    vrm = gltf.userData.vrm;
+    if (!vrm) throw new Error('VRM 扩展未找到');
+    VRMUtils.rotateVRM0(vrm);
+    scene.add(vrm.scene);
+    // initialise the spring simulation on the loaded pose; without this the
+    // hair stays at the bind pose while the body animates
+    vrm.update(0);
+    vrm.springBoneManager?.reset();
+    const box = new THREE.Box3().setFromObject(vrm.scene);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    controls.target.set(center.x, box.min.y + size.y * 0.58, center.z);
+    camera.position.set(center.x, box.min.y + size.y * 0.62, center.z + Math.max(size.y * 2.1, 2.6));
+    controls.update();
+  } catch (e) {
+    console.error(e);
+    showError('无法加载 ' + MODEL + '\n' + (e && e.message ? e.message : e));
+  }
+}
+
+async function ensureWalk() {
+  if (walkClip || !vrm) return;
+  const gltf = await loader.loadAsync(WALK);
+  const anim = gltf.userData.vrmAnimations?.[0];
+  if (!anim) throw new Error('walk 动画无效');
+  walkClip = createVRMAnimationClip(anim, vrm);
+  mixer = new THREE.AnimationMixer(vrm.scene);
+  mixer.clipAction(walkClip).play();
+}
+
+const walkBtn = document.getElementById('walk');
+const physicsBtn = document.getElementById('physics');
+const resetBtn = document.getElementById('reset');
+
+walkBtn.addEventListener('click', async () => {
+  walkOn = !walkOn;
+  if (walkOn) {
+    try { await ensureWalk(); } catch (e) { console.error(e); }
+  }
+  walkBtn.classList.toggle('on', walkOn);
+  if (mixer) mixer.timeScale = 1;
+});
+physicsBtn.addEventListener('click', () => {
+  physicsOn = !physicsOn;
+  physicsBtn.classList.toggle('on', physicsOn);
+  physicsBtn.textContent = '物理 ' + (physicsOn ? 'ON' : 'OFF');
+});
+resetBtn.addEventListener('click', () => {
+  if (!vrm) return;
+  const box = new THREE.Box3().setFromObject(vrm.scene);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  controls.target.set(center.x, box.min.y + size.y * 0.58, center.z);
+  camera.position.set(center.x, box.min.y + size.y * 0.62, center.z + Math.max(size.y * 2.1, 2.6));
+  controls.update();
+});
+
+function tick() {
+  requestAnimationFrame(tick);
+  const delta = clock.getDelta();
+  if (mixer && walkOn) mixer.update(delta);
+  if (vrm) vrm.update(physicsOn ? delta : 0);
+  controls.update();
+  renderer.render(scene, camera);
+}
+tick();
+load().then(() => {
+  if (new URLSearchParams(location.search).get('walk')) walkBtn.click();
+});
+</script>
+</body>
+</html>

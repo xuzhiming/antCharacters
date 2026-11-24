@@ -1,0 +1,1315 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>身体 + 头发 过渡微调与 VRM 导出</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0d14;
+    --panel: #111521;
+    --card: #161b2a;
+    --border: #262e44;
+    --text: #e8ecf6;
+    --muted: #8b95ad;
+    --accent: #4f8cff;
+    --accent-hover: #679cff;
+    --ok: #38c98a;
+    --warn: #f5b942;
+    --err: #ff6e6e;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font: 13px/1.5 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .layout {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+  .sidebar {
+    width: 396px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 14px 16px;
+    gap: 11px;
+  }
+  .stage {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+  .stage-tabs {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    flex-shrink: 0;
+  }
+  .tab-group {
+    display: flex;
+    gap: 6px;
+  }
+  .tab-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--muted);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .tab-btn:hover { color: var(--text); border-color: #3a4564; }
+  .tab-btn.active {
+    border-color: var(--accent);
+    background: #16223a;
+    color: #b7d0ff;
+  }
+  .sync-pill {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .sync-pill.syncing { border-color: rgba(79, 140, 255, 0.55); color: #9ec0ff; }
+  .sync-pill.pending { border-color: rgba(245, 185, 66, 0.55); color: var(--warn); }
+  .sync-pill.ok { border-color: rgba(56, 201, 138, 0.55); color: var(--ok); }
+  .sync-pill.err { border-color: rgba(255, 110, 110, 0.55); color: var(--err); }
+  .stage-body {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+  }
+  #transitionStage {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  #transitionStage[hidden] { display: none; }
+  #transitionStage canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .viewport-overlay {
+    position: absolute;
+    left: 16px;
+    top: 14px;
+    color: #9ba4ba;
+    font-size: 12px;
+    line-height: 1.6;
+    pointer-events: none;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.65);
+  }
+  .viewport-overlay b { color: #e2e8f6; }
+  .camera-bar {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    padding: 7px;
+    border: 1px solid #2a3042;
+    border-radius: 11px;
+    background: rgba(16, 19, 28, 0.86);
+    backdrop-filter: blur(8px);
+  }
+  .camera-bar button {
+    padding: 6px 12px;
+    border: 1px solid #2a3042;
+    border-radius: 7px;
+    background: #171b26;
+    color: #dfe3ee;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .camera-bar button:hover { background: #202739; border-color: var(--accent); }
+  .camera-bar button.active { border-color: var(--accent); color: #9ec0ff; background: #131c30; }
+  #previewFrame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+  #previewFrame[hidden] { display: none; }
+  .empty-stage {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    text-align: center;
+    padding: 32px;
+    pointer-events: none;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .topbar h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 650;
+  }
+  .topbar a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .topbar a:hover { color: var(--text); border-color: #3a4564; }
+  .subtitle {
+    margin: -4px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .dropzone {
+    position: relative;
+    border: 1px dashed #364160;
+    border-radius: 10px;
+    background: var(--card);
+    padding: 10px 12px;
+    transition: border-color .15s, background .15s;
+    cursor: pointer;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: #1a2135;
+  }
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .dropzone-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .dropzone-badge {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .dropzone-file {
+    font-size: 12px;
+    color: var(--muted);
+    word-break: break-all;
+  }
+  .dropzone-file.selected { color: #9fc0ff; }
+  label.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+  }
+  input:focus { outline: none; border-color: var(--accent); }
+  .adjust-panel {
+    border: 1px solid rgba(79, 140, 255, 0.45);
+    border-radius: 10px;
+    background: #131a2c;
+    padding: 11px 12px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .adjust-panel.show { display: flex; }
+  .adjust-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .adjust-header h2 {
+    margin: 0;
+    font-size: 13px;
+    color: #bcd3ff;
+  }
+  .adjust-header button {
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .adjust-header button:hover { color: var(--text); border-color: var(--accent); }
+  .slider-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .slider-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12px;
+  }
+  .slider-head span { color: #d5ddf0; font-weight: 500; }
+  .slider-hint { color: var(--muted); font-size: 11px; margin-left: 4px; font-weight: 400; }
+  .slider-val {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: #9ec0ff;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+    margin: 0;
+  }
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: #cfd6e8;
+    padding-top: 2px;
+  }
+  .toggle-row label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  details.advanced {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    padding: 8px 12px;
+  }
+  details.advanced summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    user-select: none;
+  }
+  details.advanced[open] summary { color: var(--text); margin-bottom: 10px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .adv-body { display: flex; flex-direction: column; gap: 8px; }
+  button.primary {
+    width: 100%;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, opacity .15s;
+  }
+  button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+  button.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.secondary {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.secondary:hover:not(:disabled) { border-color: var(--accent); color: #bcd3ff; }
+  button.secondary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .status-box {
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--card);
+    padding: 9px 11px;
+    font-size: 12px;
+    display: none;
+  }
+  .status-box.show { display: block; }
+  .status-box.ok { border-color: rgba(56, 201, 138, 0.45); color: var(--ok); }
+  .status-box.err { border-color: rgba(255, 110, 110, 0.45); color: var(--err); white-space: pre-wrap; }
+  .status-box.run { border-color: rgba(79, 140, 255, 0.45); color: #9ec0ff; }
+  .log-details {
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--bg);
+    padding: 6px 10px;
+    display: none;
+  }
+  .log-details.show { display: block; }
+  .log-details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+  #logBox {
+    margin: 8px 0 0;
+    max-height: 150px;
+    overflow: auto;
+    font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #aab4cb;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .result-card {
+    border: 1px solid rgba(56, 201, 138, 0.45);
+    border-radius: 10px;
+    background: #111f1b;
+    padding: 12px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .result-card.show { display: flex; }
+  .result-card h3 { margin: 0; font-size: 13px; color: var(--ok); }
+  .result-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 10px;
+    font-size: 12px;
+    color: #cdd6e8;
+  }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-link {
+    flex: 1;
+    text-align: center;
+    padding: 7px 10px;
+    border-radius: 7px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+  }
+  .btn-link.primary { background: var(--ok); color: #081711; border-color: transparent; }
+  .btn-link:hover { filter: brightness(1.08); }
+  .history-section {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .history-header button {
+    border: 0;
+    background: transparent;
+    color: #8fb6ff;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+  #modelList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .model-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 9px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+  }
+  .model-item.active { border-color: var(--accent); }
+  .model-meta { min-width: 0; flex: 1; }
+  .model-name {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .model-sub { font-size: 11px; color: var(--muted); }
+  .model-actions { display: flex; gap: 5px; flex-shrink: 0; }
+  .mini-btn {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 11px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .mini-btn:hover { border-color: var(--accent); color: #9fc0ff; }
+  .mini-btn.danger:hover { border-color: var(--err); color: var(--err); }
+  .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; overflow: auto; }
+    .sidebar { width: 100%; border-right: 0; border-bottom: 1px solid var(--border); }
+    .stage { min-height: 540px; }
+  }
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="topbar">
+      <h1>身体 + 头发 过渡微调与导出</h1>
+      <a href="/">Charakuru 主界面</a>
+    </div>
+    <p class="subtitle">上传身体与头发模型后，先进入 3D 过渡窗口微调头发大小与位置，确认后自动同步到 VRM 动作预览与导出文件。</p>
+
+    <div class="dropzone" id="bodyDrop">
+      <input id="bodyInput" type="file" accept=".fbx,.glb,.gltf,.zip" aria-label="上传 T-pose 无头发身体模型">
+      <div class="dropzone-title">
+        <span>1. T-pose 无头发身体模型</span>
+        <span class="dropzone-badge">.fbx / .glb / .zip</span>
+      </div>
+      <div class="dropzone-file" id="bodyFileLabel">点击选择或拖拽文件到此处</div>
+    </div>
+
+    <div class="dropzone" id="hairDrop">
+      <input id="hairInput" type="file" accept=".fbx,.glb,.gltf,.zip" aria-label="上传头发模型">
+      <div class="dropzone-title">
+        <span>2. 头发模型</span>
+        <span class="dropzone-badge">.fbx / .glb / .zip</span>
+      </div>
+      <div class="dropzone-file" id="hairFileLabel">点击选择或拖拽文件到此处</div>
+    </div>
+
+    <label class="field">
+      <span>导出模型名称（英文/数字/下划线）</span>
+      <input id="modelName" type="text" placeholder="例如 my_avatar">
+    </label>
+
+    <button id="stageBtn" class="primary" type="button">上传并进入过渡调整</button>
+
+    <section id="adjustPanel" class="adjust-panel" aria-label="头发实时调整">
+      <div class="adjust-header">
+        <h2>头发尺寸与位置微调</h2>
+        <button id="resetAdjustBtn" type="button">重置自动拟合</button>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-head">
+          <span>等比缩放 <span class="slider-hint">小 ↔ 大</span></span>
+          <span class="slider-val" id="valScale">1.000×</span>
+        </div>
+        <input id="sliderScale" type="range" min="0.70" max="1.30" step="0.005" value="1.00" aria-label="等比缩放头发">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-head">
+          <span>左右偏移 <span class="slider-hint">左(-) ↔ 右(+)</span></span>
+          <span class="slider-val" id="valX">0.000</span>
+        </div>
+        <input id="sliderX" type="range" min="-0.12" max="0.12" step="0.001" value="0" aria-label="左右偏移头发">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-head">
+          <span>前后偏移 <span class="slider-hint">后(-) ↔ 前(+)</span></span>
+          <span class="slider-val" id="valFB">0.000</span>
+        </div>
+        <input id="sliderFB" type="range" min="-0.12" max="0.12" step="0.001" value="0" aria-label="前后偏移头发">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-head">
+          <span>上下偏移 <span class="slider-hint">下(-) ↔ 上(+)</span></span>
+          <span class="slider-val" id="valZ">0.000</span>
+        </div>
+        <input id="sliderZ" type="range" min="-0.12" max="0.12" step="0.001" value="0" aria-label="上下偏移头发">
+      </div>
+
+      <div class="toggle-row">
+        <label>
+          <input id="autoApplyToggle" type="checkbox" checked>
+          <span>调整后自动应用到 VRM 预览</span>
+        </label>
+      </div>
+
+      <div class="btn-row">
+        <button id="applyNowBtn" class="secondary" type="button" style="flex:1">立即导出 VRM</button>
+        <button id="gotoVrmBtn" class="secondary" type="button" style="flex:1">查看 VRM 动作预览</button>
+      </div>
+    </section>
+
+    <details class="advanced">
+      <summary>导出选项（身高 / 作者）</summary>
+      <div class="adv-body">
+        <div class="grid-2">
+          <label class="field">
+            <span>目标身高 (m，0 不缩放)</span>
+            <input id="targetHeight" type="number" step="0.05" min="0" value="1.6">
+          </label>
+          <label class="field">
+            <span>作者名</span>
+            <input id="author" type="text" value="Charakuru Local Blender">
+          </label>
+        </div>
+      </div>
+    </details>
+
+    <div id="statusBox" class="status-box" role="status" aria-live="polite"></div>
+
+    <details id="logDetails" class="log-details">
+      <summary>运行日志</summary>
+      <pre id="logBox"></pre>
+    </details>
+
+    <section id="resultCard" class="result-card" aria-label="导出结果">
+      <h3>VRM 1.0 已就绪</h3>
+      <div id="resultStats" class="result-stats"></div>
+      <div class="btn-row">
+        <a id="downloadVrm" class="btn-link primary" download>下载 VRM</a>
+        <a id="openPreviewTab" class="btn-link" target="_blank" rel="noopener">新标签页打开预览</a>
+      </div>
+    </section>
+
+    <section class="history-section">
+      <div class="history-header">
+        <span>已生成模型列表</span>
+        <button id="refreshList" type="button">刷新</button>
+      </div>
+      <div id="modelList"></div>
+    </section>
+  </aside>
+
+  <main class="stage">
+    <div class="stage-tabs">
+      <div class="tab-group">
+        <button id="tabTransition" class="tab-btn" type="button">1. 过渡调整窗口</button>
+        <button id="tabVrm" class="tab-btn active" type="button">2. VRM 动作预览</button>
+      </div>
+      <div id="syncPill" class="sync-pill">未加载组合模型</div>
+    </div>
+
+    <div class="stage-body">
+      <div id="emptyStage" class="empty-stage">
+        <div>暂无可预览的模型。<br>请在左侧上传身体与头发模型并点击“上传并进入过渡调整”。</div>
+      </div>
+
+      <div id="transitionStage" hidden>
+        <div class="viewport-overlay">
+          <b>头型 + 身体组合过渡窗口</b> · 拖拽滑块实时缩放/平移头发<br>
+          左键旋转 · 滚轮缩放 · 右键平移
+        </div>
+        <div class="camera-bar">
+          <button type="button" data-view="head" class="active">头部特写</button>
+          <button type="button" data-view="full">全身视角</button>
+          <button type="button" data-view="front">正面</button>
+          <button type="button" data-view="side">侧面</button>
+          <button type="button" data-view="back">背面</button>
+        </div>
+      </div>
+
+      <iframe id="previewFrame" title="VRM 3D 动作预览" hidden></iframe>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/OrbitControls.js';
+
+const $ = (s) => document.querySelector(s);
+
+const bodyInput = $('#bodyInput');
+const hairInput = $('#hairInput');
+const bodyDrop = $('#bodyDrop');
+const hairDrop = $('#hairDrop');
+const bodyFileLabel = $('#bodyFileLabel');
+const hairFileLabel = $('#hairFileLabel');
+const modelNameInput = $('#modelName');
+const targetHeightInput = $('#targetHeight');
+const authorInput = $('#author');
+const stageBtn = $('#stageBtn');
+
+const adjustPanel = $('#adjustPanel');
+const resetAdjustBtn = $('#resetAdjustBtn');
+const sliderScale = $('#sliderScale');
+const sliderX = $('#sliderX');
+const sliderFB = $('#sliderFB');
+const sliderZ = $('#sliderZ');
+const valScale = $('#valScale');
+const valX = $('#valX');
+const valFB = $('#valFB');
+const valZ = $('#valZ');
+const autoApplyToggle = $('#autoApplyToggle');
+const applyNowBtn = $('#applyNowBtn');
+const gotoVrmBtn = $('#gotoVrmBtn');
+
+const statusBox = $('#statusBox');
+const logDetails = $('#logDetails');
+const logBox = $('#logBox');
+const resultCard = $('#resultCard');
+const resultStats = $('#resultStats');
+const downloadVrm = $('#downloadVrm');
+const openPreviewTab = $('#openPreviewTab');
+const modelList = $('#modelList');
+const refreshListBtn = $('#refreshList');
+
+const tabTransition = $('#tabTransition');
+const tabVrm = $('#tabVrm');
+const syncPill = $('#syncPill');
+const emptyStage = $('#emptyStage');
+const transitionStage = $('#transitionStage');
+const previewFrame = $('#previewFrame');
+
+let activeTab = 'vrm';
+let currentPreviewFile = null;
+let stagingBusy = false;
+let currentSession = null; // { id, name, data }
+
+let finalizeInFlight = false;
+let pendingFinalize = false;
+let debounceTimer = null;
+
+// --- Three.js Transition Viewport ---
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+transitionStage.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0d14);
+
+const camera = new THREE.PerspectiveCamera(30, 1, 0.01, 200);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.5));
+const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+keyLight.position.set(1.2, 3.0, 2.4);
+scene.add(keyLight);
+const rimLight = new THREE.DirectionalLight(0x88aaff, 1.1);
+rimLight.position.set(-1.5, 2.0, -2.5);
+scene.add(rimLight);
+
+const groundMesh = new THREE.Mesh(
+  new THREE.CircleGeometry(3, 64),
+  new THREE.MeshStandardMaterial({ color: 0x151a26, roughness: 1, metalness: 0 }),
+);
+groundMesh.rotation.x = -Math.PI / 2;
+scene.add(groundMesh);
+
+const transitionRoot = new THREE.Group();
+scene.add(transitionRoot);
+
+let bodyGroup = null;
+let hairPivot = null;
+let pivotBaseGlTF = new THREE.Vector3();
+let bodyBoundsGlTF = { center: new THREE.Vector3(0, 0.9, 0), height: 1.6, minY: 0 };
+
+const gltfLoader = new GLTFLoader();
+
+function resizeTransition() {
+  const w = transitionStage.clientWidth;
+  const h = transitionStage.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+new ResizeObserver(resizeTransition).observe(transitionStage);
+addEventListener('resize', resizeTransition);
+
+(function animateTransition() {
+  requestAnimationFrame(animateTransition);
+  if (activeTab === 'transition' && !transitionStage.hidden) {
+    controls.update();
+    renderer.render(scene, camera);
+  }
+})();
+
+function setCameraPreset(preset) {
+  for (const btn of document.querySelectorAll('.camera-bar button')) {
+    btn.classList.toggle('active', btn.dataset.view === preset);
+  }
+  const H = Math.max(bodyBoundsGlTF.height, 0.2);
+  const headCenter = pivotBaseGlTF.clone();
+  const fullCenter = bodyBoundsGlTF.center.clone();
+
+  if (preset === 'head') {
+    controls.target.copy(headCenter);
+    camera.position.set(headCenter.x, headCenter.y + 0.04 * H, headCenter.z + 0.42 * H);
+  } else if (preset === 'full') {
+    controls.target.copy(fullCenter);
+    camera.position.set(fullCenter.x, fullCenter.y + 0.12 * H, fullCenter.z + 2.1 * H);
+  } else if (preset === 'front') {
+    controls.target.copy(headCenter);
+    camera.position.set(headCenter.x, headCenter.y, headCenter.z + 0.36 * H);
+  } else if (preset === 'side') {
+    controls.target.copy(headCenter);
+    camera.position.set(headCenter.x + 0.36 * H, headCenter.y, headCenter.z);
+  } else if (preset === 'back') {
+    controls.target.copy(headCenter);
+    camera.position.set(headCenter.x, headCenter.y, headCenter.z - 0.38 * H);
+  }
+  controls.minDistance = 0.08 * H;
+  controls.maxDistance = 5.0 * H;
+  controls.update();
+}
+
+for (const btn of document.querySelectorAll('.camera-bar button')) {
+  btn.onclick = () => setCameraPreset(btn.dataset.view);
+}
+
+// --- Helpers ---
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes)) return '';
+  if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+}
+
+function setStatus(kind, text) {
+  statusBox.className = 'status-box show ' + kind;
+  statusBox.textContent = text;
+}
+
+function setSyncPill(kind, text) {
+  syncPill.className = 'sync-pill' + (kind ? ' ' + kind : '');
+  syncPill.textContent = text;
+}
+
+function setActiveTab(tab) {
+  activeTab = tab;
+  tabTransition.classList.toggle('active', tab === 'transition');
+  tabVrm.classList.toggle('active', tab === 'vrm');
+
+  const hasTransition = Boolean(currentSession);
+  const hasVrm = Boolean(currentPreviewFile);
+
+  transitionStage.hidden = !(tab === 'transition' && hasTransition);
+  previewFrame.hidden = !(tab === 'vrm' && hasVrm);
+
+  const showEmpty = (tab === 'transition' && !hasTransition) || (tab === 'vrm' && !hasVrm);
+  emptyStage.style.display = showEmpty ? 'grid' : 'none';
+
+  if (tab === 'transition' && hasTransition) {
+    requestAnimationFrame(resizeTransition);
+  }
+}
+
+tabTransition.onclick = () => setActiveTab('transition');
+tabVrm.onclick = () => setActiveTab('vrm');
+
+function bindDropzone(zone, input, label, onSelect) {
+  const update = () => {
+    const f = input.files?.[0];
+    if (f) {
+      label.textContent = `${f.name} (${formatBytes(f.size)})`;
+      label.classList.add('selected');
+      onSelect?.(f);
+    } else {
+      label.textContent = '点击选择或拖拽文件到此处';
+      label.classList.remove('selected');
+    }
+  };
+  input.addEventListener('change', update);
+  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if (e.dataTransfer?.files?.length) {
+      const dt = new DataTransfer();
+      dt.items.add(e.dataTransfer.files[0]);
+      input.files = dt.files;
+      update();
+    }
+  });
+}
+
+bindDropzone(bodyDrop, bodyInput, bodyFileLabel, (file) => {
+  if (!modelNameInput.value.trim()) {
+    const stem = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
+    if (stem) modelNameInput.value = stem;
+  }
+});
+bindDropzone(hairDrop, hairInput, hairFileLabel);
+
+function getSliderParams() {
+  return {
+    scaleMult: Number(sliderScale.value) || 1.0,
+    offsetX: Number(sliderX.value) || 0.0,
+    offsetFB: Number(sliderFB.value) || 0.0,
+    offsetZ: Number(sliderZ.value) || 0.0,
+  };
+}
+
+function updateSliderReadouts() {
+  const p = getSliderParams();
+  valScale.textContent = `${p.scaleMult.toFixed(3)}×`;
+  valX.textContent = `${p.offsetX >= 0 ? '+' : ''}${p.offsetX.toFixed(3)}`;
+  valFB.textContent = `${p.offsetFB >= 0 ? '+' : ''}${p.offsetFB.toFixed(3)}`;
+  valZ.textContent = `${p.offsetZ >= 0 ? '+' : ''}${p.offsetZ.toFixed(3)}`;
+  return p;
+}
+
+function applySlidersToViewport() {
+  const p = updateSliderReadouts();
+  if (!hairPivot || !currentSession) return p;
+  const H = Number(currentSession.data.bodyHeight) || 1.6;
+  // Exact match to finalize-staged-vrm.py coordinate mapping:
+  // Blender (X, Y, Z) -> Three.js Y-up (X, Z, -Y)
+  hairPivot.scale.setScalar(p.scaleMult);
+  hairPivot.position.set(
+    pivotBaseGlTF.x + p.offsetX * H,
+    pivotBaseGlTF.y + p.offsetZ * H,
+    pivotBaseGlTF.z + p.offsetFB * H,
+  );
+  return p;
+}
+
+async function loadTransitionModels(sessionData) {
+  transitionRoot.clear();
+  bodyGroup = null;
+  hairPivot = null;
+
+  const [bodyGltf, hairGltf] = await Promise.all([
+    gltfLoader.loadAsync(sessionData.bodyGlbUrl),
+    gltfLoader.loadAsync(sessionData.hairGlbUrl),
+  ]);
+
+  bodyGroup = bodyGltf.scene;
+  transitionRoot.add(bodyGroup);
+
+  const box = new THREE.Box3().setFromObject(bodyGroup);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+
+  const H = Math.max(size.y, Number(sessionData.bodyHeight) || 1.6);
+  bodyBoundsGlTF = { center, height: H, minY: box.min.y };
+  groundMesh.position.y = box.min.y;
+  groundMesh.scale.setScalar(Math.max(H / 1.6, 0.5));
+
+  const [cx, cy, cz] = sessionData.craniumCenter;
+  pivotBaseGlTF.set(cx, cz, -cy);
+
+  hairPivot = new THREE.Group();
+  hairPivot.add(hairGltf.scene);
+  transitionRoot.add(hairPivot);
+
+  resetSlidersToDefault();
+  applySlidersToViewport();
+  setCameraPreset('head');
+  setActiveTab('transition');
+}
+
+function resetSlidersToDefault() {
+  sliderScale.value = '1.00';
+  sliderX.value = '0';
+  sliderFB.value = '0';
+  sliderZ.value = '0';
+  updateSliderReadouts();
+}
+
+function loadVrmPreview(file, { switchToVrmTab = false } = {}) {
+  currentPreviewFile = file;
+  const url = `./vrm-viewer.html?model=${encodeURIComponent(file)}&walk=1&t=${Date.now()}`;
+  previewFrame.src = url;
+  highlightListItem();
+  if (switchToVrmTab) {
+    setActiveTab('vrm');
+  } else if (activeTab === 'vrm') {
+    setActiveTab('vrm');
+  }
+}
+
+function highlightListItem() {
+  for (const el of modelList.querySelectorAll('.model-item')) {
+    el.classList.toggle('active', el.dataset.file === currentPreviewFile);
+  }
+}
+
+async function refreshModels({ autoLoadFirst = false } = {}) {
+  try {
+    const res = await fetch('/api/body-hair/list');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '无法读取模型列表');
+    const models = data.models || [];
+    modelList.replaceChildren();
+
+    if (!models.length) {
+      const empty = document.createElement('div');
+      empty.className = 'model-sub';
+      empty.textContent = '暂无已导出的 VRM 模型。';
+      modelList.append(empty);
+      return;
+    }
+
+    for (const item of models) {
+      const row = document.createElement('div');
+      row.className = 'model-item';
+      row.dataset.file = item.file;
+
+      const meta = document.createElement('div');
+      meta.className = 'model-meta';
+      const title = document.createElement('div');
+      title.className = 'model-name';
+      title.textContent = item.file;
+      const sub = document.createElement('div');
+      sub.className = 'model-sub';
+      sub.textContent = formatBytes(item.size);
+      meta.append(title, sub);
+
+      const actions = document.createElement('div');
+      actions.className = 'model-actions';
+      const previewBtn = document.createElement('button');
+      previewBtn.type = 'button';
+      previewBtn.className = 'mini-btn';
+      previewBtn.textContent = '预览';
+      previewBtn.onclick = () => loadVrmPreview(item.file, { switchToVrmTab: true });
+
+      const dlLink = document.createElement('a');
+      dlLink.className = 'mini-btn';
+      dlLink.textContent = '下载';
+      dlLink.href = item.downloadUrl;
+      dlLink.download = item.file;
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'mini-btn danger';
+      delBtn.textContent = '删除';
+      delBtn.onclick = () => deleteModel(item.file, delBtn);
+
+      actions.append(previewBtn, dlLink, delBtn);
+      row.append(meta, actions);
+      modelList.append(row);
+    }
+
+    if (autoLoadFirst && !currentPreviewFile && !currentSession) {
+      loadVrmPreview(models[0].file, { switchToVrmTab: true });
+    } else {
+      highlightListItem();
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function deleteModel(file, btn) {
+  if (!window.confirm(`确定要删除模型「${file}」吗？此操作无法撤销。`)) {
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/body-hair/models/${encodeURIComponent(file)}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '删除模型失败');
+
+    if (currentPreviewFile === file) {
+      currentPreviewFile = null;
+      previewFrame.src = 'about:blank';
+      setActiveTab(activeTab);
+    }
+    if (downloadVrm.download === file) {
+      resultCard.classList.remove('show');
+    }
+    setStatus('ok', `已删除模型：${file}`);
+    await refreshModels();
+  } catch (err) {
+    setStatus('err', err.message || String(err));
+    btn.disabled = false;
+  }
+}
+
+refreshListBtn.onclick = () => refreshModels();
+
+function showResult(job) {
+  const v = job.result || {};
+  const ha = v.hairAlignment || {};
+  const userOff = Array.isArray(ha.userOffset)
+    ? ha.userOffset.map((n) => Number(n).toFixed(3)).join(', ')
+    : '0.000, 0.000, 0.000';
+  resultStats.replaceChildren();
+  const entries = [
+    ['输出文件', `${job.name}.vrm`],
+    ['文件大小', formatBytes(v.vrmBytes)],
+    ['人形骨骼', `${v.mappedBoneCount ?? '-'} 根`],
+    ['修补零权重', `${v.repairedUnweightedVerts ?? 0} 个`],
+    ['自动/微调缩放', `${ha.autoScale ?? '-'} × ${ha.userScaleMult ?? 1}`],
+    ['微调偏移(X/前后/Z)', userOff],
+    ['MToon 材质', `${v.inspect?.mtoon ?? '-'} 个`],
+    ['打包贴图', `${v.inspect?.textures ?? '-'} 张`],
+  ];
+  for (const [k, val] of entries) {
+    const div = document.createElement('div');
+    div.textContent = `${k}：${val}`;
+    resultStats.append(div);
+  }
+  downloadVrm.href = job.downloadUrl;
+  downloadVrm.download = `${job.name}.vrm`;
+  openPreviewTab.href = job.previewUrl;
+  resultCard.classList.add('show');
+}
+
+async function pollStage(sessionId) {
+  while (true) {
+    await new Promise((r) => setTimeout(r, 700));
+    const res = await fetch(`/api/body-hair/stage/${sessionId}`);
+    const s = await res.json();
+    if (!res.ok) throw new Error(s.error || '查询过渡场景状态失败');
+
+    if (s.log) {
+      logBox.textContent = s.log;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+    if (s.status === 'staging') {
+      setStatus('run', s.stage || '正在准备过渡调整场景…');
+      continue;
+    }
+    if (s.status === 'failed') {
+      throw new Error(s.error || '准备过渡场景失败');
+    }
+    if (s.status === 'ready') {
+      return s;
+    }
+  }
+}
+
+async function pollFinalizeJob(jobId) {
+  while (true) {
+    await new Promise((r) => setTimeout(r, 700));
+    const res = await fetch(`/api/body-hair/jobs/${jobId}`);
+    const job = await res.json();
+    if (!res.ok) throw new Error(job.error || '查询导出任务失败');
+
+    if (job.log) {
+      logBox.textContent = job.log;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+    if (job.status === 'running') {
+      setStatus('run', job.stage || '正在同步到 VRM 预览…');
+      continue;
+    }
+    if (job.status === 'failed') {
+      throw new Error(job.error || 'VRM 导出失败');
+    }
+    if (job.status === 'ready') {
+      return job;
+    }
+  }
+}
+
+async function runFinalize({ switchToVrmOnComplete = false } = {}) {
+  if (!currentSession) return;
+  if (finalizeInFlight) {
+    pendingFinalize = true;
+    setSyncPill('pending', '等待当前同步完成…');
+    return;
+  }
+
+  finalizeInFlight = true;
+  applyNowBtn.disabled = true;
+  setSyncPill('syncing', '正在同步导出 VRM…');
+  setStatus('run', '正在按当前滑块参数导出 VRM 并更新预览…');
+
+  try {
+    const p = getSliderParams();
+    const res = await fetch('/api/body-hair/finalize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: currentSession.id,
+        name: modelNameInput.value.trim() || currentSession.name,
+        scaleMult: p.scaleMult,
+        offsetX: p.offsetX,
+        offsetFB: p.offsetFB,
+        offsetZ: p.offsetZ,
+        targetHeight: Number(targetHeightInput.value || 1.6),
+        author: authorInput.value.trim() || 'Charakuru Local Blender',
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 409) {
+        pendingFinalize = true;
+        setSyncPill('pending', '排队等待导出…');
+        return;
+      }
+      throw new Error(data.error || '触发 VRM 导出失败');
+    }
+
+    const job = await pollFinalizeJob(data.id);
+    showResult(job);
+    loadVrmPreview(`${job.name}.vrm`, { switchToVrmTab: switchToVrmOnComplete });
+    await refreshModels();
+    setStatus('ok', `已同步应用调整并更新 VRM 预览：${job.name}.vrm`);
+    setSyncPill('ok', `已同步到 ${job.name}.vrm`);
+  } catch (err) {
+    setStatus('err', err.message || String(err));
+    setSyncPill('err', '同步失败');
+    logDetails.open = true;
+  } finally {
+    finalizeInFlight = false;
+    applyNowBtn.disabled = false;
+    if (pendingFinalize) {
+      pendingFinalize = false;
+      runFinalize({ switchToVrmOnComplete: false });
+    }
+  }
+}
+
+function clearDebounceTimer() {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+}
+
+function scheduleAutoFinalize(immediate = false) {
+  if (!currentSession) return;
+  clearDebounceTimer();
+  if (!autoApplyToggle.checked) {
+    setSyncPill('pending', '已修改（未自动同步）');
+    return;
+  }
+  setSyncPill('pending', '准备同步到 VRM…');
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null;
+    runFinalize({ switchToVrmOnComplete: false });
+  }, immediate ? 80 : 600);
+}
+
+for (const slider of [sliderScale, sliderX, sliderFB, sliderZ]) {
+  slider.addEventListener('input', () => {
+    applySlidersToViewport();
+    if (currentSession) scheduleAutoFinalize(false);
+  });
+  slider.addEventListener('change', () => {
+    applySlidersToViewport();
+    if (currentSession && autoApplyToggle.checked) scheduleAutoFinalize(true);
+  });
+}
+
+autoApplyToggle.addEventListener('change', () => {
+  if (currentSession && autoApplyToggle.checked) {
+    scheduleAutoFinalize(true);
+  }
+});
+
+resetAdjustBtn.onclick = () => {
+  resetSlidersToDefault();
+  applySlidersToViewport();
+  if (currentSession && autoApplyToggle.checked) scheduleAutoFinalize(true);
+};
+
+applyNowBtn.onclick = () => {
+  clearDebounceTimer();
+  runFinalize({ switchToVrmOnComplete: false });
+};
+
+gotoVrmBtn.onclick = async () => {
+  if (debounceTimer) {
+    clearDebounceTimer();
+    await runFinalize({ switchToVrmOnComplete: true });
+    return;
+  }
+  if (!currentPreviewFile && currentSession && !finalizeInFlight) {
+    await runFinalize({ switchToVrmOnComplete: true });
+    return;
+  }
+  setActiveTab('vrm');
+};
+
+stageBtn.onclick = async () => {
+  if (stagingBusy || finalizeInFlight) return;
+  const bodyFile = bodyInput.files?.[0];
+  const hairFile = hairInput.files?.[0];
+  if (!bodyFile || !hairFile) {
+    setStatus('err', '请先同时选择“身体模型”和“头发模型”。');
+    return;
+  }
+
+  stagingBusy = true;
+  stageBtn.disabled = true;
+  clearTimeout(debounceTimer);
+  debounceTimer = null;
+  pendingFinalize = false;
+  resultCard.classList.remove('show');
+  logDetails.classList.add('show');
+  logBox.textContent = '';
+  setSyncPill('syncing', '正在准备过渡窗口…');
+  setStatus('run', '正在上传模型并执行自动头型拟合…');
+
+  try {
+    const fd = new FormData();
+    fd.append('body', bodyFile);
+    fd.append('hair', hairFile);
+    if (modelNameInput.value.trim()) fd.append('name', modelNameInput.value.trim());
+
+    const res = await fetch('/api/body-hair/stage', { method: 'POST', body: fd });
+    const created = await res.json();
+    if (!res.ok) throw new Error(created.error || '创建过渡调整任务失败');
+
+    const readySession = await pollStage(created.id);
+    currentSession = readySession;
+    await loadTransitionModels(readySession.data);
+    adjustPanel.classList.add('show');
+    setStatus('ok', '过渡调整窗口已就绪！可拖拽滑块缩放/平移头发，右侧将实时显示并自动更新 VRM。');
+    setSyncPill('pending', '正在生成初始 VRM 预览…');
+
+    runFinalize({ switchToVrmOnComplete: false });
+  } catch (err) {
+    setStatus('err', err.message || String(err));
+    setSyncPill('err', '过渡场景加载失败');
+    logDetails.open = true;
+  } finally {
+    stagingBusy = false;
+    stageBtn.disabled = false;
+  }
+};
+
+updateSliderReadouts();
+refreshModels({ autoLoadFirst: true });
+</script>
+</body>
+</html>

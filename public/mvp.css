@@ -1,0 +1,23 @@
+/* MVP workflow keeps the existing character workspace and theme. */
+main.mini-inspector{grid-template-columns:300px minmax(0,1fr)}
+main.mini-inspector .left{overflow:auto;min-height:0}
+main.mini-inspector .workspace{min-height:0;overflow:hidden}
+main.mini-inspector #viewport>canvas{position:absolute;inset:0}
+[data-panel="rig"] .form-content,[data-panel="review"] .form-content{display:flex;flex-direction:column;gap:14px}
+[data-panel="rig"] .wide,[data-panel="review"] .wide{min-height:40px;height:auto;white-space:normal;line-height:1.5}
+[data-panel="rig"] .callout,[data-panel="review"] .callout{line-height:1.7;margin:0}
+#reviewTime{width:100%;accent-color:var(--accent)}
+#reviewPose{font-variant-numeric:tabular-nums;margin:0;color:var(--muted)}
+#boneMappingFields{display:grid;gap:10px;padding-top:12px}
+#boneMappingFields select{width:100%;min-width:0;font-size:12px}
+.mvp-setup-controls{display:grid;grid-template-columns:minmax(220px,1fr) minmax(260px,1fr);gap:24px;max-width:960px;margin:24px 0}
+.mvp-setup-controls details{border:1px solid var(--line);border-radius:12px;padding:16px}
+.mvp-setup-controls details[open]{display:flex;flex-direction:column;gap:14px}
+.mvp-setup-controls summary{cursor:pointer;margin-bottom:12px}
+.mvp-setup-controls .file-button{margin-top:12px}
+.steps button{white-space:nowrap}
+.steps-note{font-size:11px}
+@media(max-width:1100px){main.mini-inspector{grid-template-columns:260px minmax(0,1fr)}.steps{overflow-x:auto;flex-wrap:nowrap}.steps-note{display:none}}
+@media(max-width:700px){main.mini-inspector{grid-template-columns:220px minmax(0,1fr)}.mvp-setup-controls{grid-template-columns:1fr}}
+
+main.mini-inspector #focus,main.mini-inspector #undo,main.mini-inspector #redo,main.mini-inspector label:has(#showLines){display:none}

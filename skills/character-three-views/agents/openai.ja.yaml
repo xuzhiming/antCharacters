@@ -1,0 +1,4 @@
+interface:
+  display_name: "バランス調整用の三面図"
+  short_description: "部位画像の制作後に、元絵のデザインを保った全身三面図を制作・登録します"
+  default_prompt: "$character-three-views を使い、元絵と完成した部位画像からバランス調整用の正面・本人右側面・背面を制作し、同じプロジェクトへ登録してください。"

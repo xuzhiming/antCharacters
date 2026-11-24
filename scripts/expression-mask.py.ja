@@ -1,0 +1,625 @@
+"""Skin-mask blink foundation. The baked owned key remains editable in Blender.
+
+The agent identifies eyes and parts; helpers fit, project, bind and bake geometry.
+Coordinates are in the Studio camera frame, so targets have no fixed vertex IDs.
+"""
+import json
+import colorsys
+from pathlib import Path
+
+import bpy
+import numpy as np
+from mathutils import Matrix, Vector
+from mathutils.bvhtree import BVHTree
+
+ASSET = Path(__file__).resolve().parent.parent/'assets/expression-authoring/skin-blink-mask.json'
+
+
+def components(mesh):
+    adjacent = [set() for _ in mesh.vertices]
+    for edge in mesh.edges:
+        a, b = edge.vertices
+        adjacent[a].add(b); adjacent[b].add(a)
+    unseen, result = set(range(len(adjacent))), []
+    while unseen:
+        pending = [unseen.pop()]; part = []
+        while pending:
+            i = pending.pop(); part.append(i)
+            new = adjacent[i] & unseen
+            unseen.difference_update(new); pending.extend(new)
+        result.append(sorted(part))
+    return sorted(result, key=len, reverse=True)
+
+
+def boundaries(mesh, region):
+    """Connected boundary edges, including imperfect Tripo seams, without welding."""
+    counts = {}
+    region = set(region)
+    for poly in mesh.polygons:
+        if not all(i in region for i in poly.vertices):
+            continue
+        for edge in poly.edge_keys:
+            edge = tuple(sorted(edge)); counts[edge] = counts.get(edge, 0)+1
+    adjacency = {}
+    for (a, b), count in counts.items():
+        if count == 1:
+            adjacency.setdefault(a, set()).add(b); adjacency.setdefault(b, set()).add(a)
+    unseen, result = set(adjacency), []
+    while unseen:
+        pending = [unseen.pop()]; part = []
+        while pending:
+            i = pending.pop(); part.append(i)
+            new = adjacency[i] & unseen
+            unseen.difference_update(new); pending.extend(new)
+        result.append(sorted(part))
+    return result
+
+
+def basis_world(obj):
+    data = obj.data.shape_keys.key_blocks[0].data if obj.data.shape_keys else obj.data.vertices
+    return np.array([obj.matrix_world @ v.co for v in data], dtype=float)
+
+
+def axes(studio):
+    _, front, up, right, _ = studio.frame()
+    return np.array([right, -front, up], dtype=float)
+
+
+def canonical(points, config):
+    return (np.asarray(points)-config['center']) @ np.array(config['axes']).T/config['scale']
+
+
+def world(points, config):
+    return np.asarray(points)*config['scale'] @ np.array(config['axes'])+config['center']
+
+
+class Warp:
+    """The prototype's TPS front plane plus affine depth, applied to BOTH states."""
+    def __init__(self, source, target, depth_scale=1, depth_offset=0):
+        self.a = np.asarray(source, dtype=float)
+        b = np.asarray(target, dtype=float)
+        n = len(self.a); poly = np.c_[np.ones(n), self.a]
+        if n < 3 or np.linalg.matrix_rank(poly) < 3:
+            raise ValueError('目の目印が重なっています。正面から位置を確認してください。')
+        r = np.linalg.norm(self.a[:, None]-self.a[None, :], axis=2)
+        self.coeff = np.linalg.solve(np.block([[self.kernel(r)+np.eye(n)*1e-8, poly], [poly.T, np.zeros((3, 3))]]), np.r_[b, np.zeros((3, 2))])
+        self.depth_scale, self.depth_offset = depth_scale, depth_offset
+
+    @staticmethod
+    def kernel(r):
+        return r*r*np.log(np.maximum(r, 1e-12))
+
+    def __call__(self, points):
+        p = np.asarray(points); xz = p[:, [0, 2]]
+        q = np.c_[self.kernel(np.linalg.norm(xz[:, None]-self.a[None, :], axis=2)), np.ones(len(p)), xz] @ self.coeff
+        return np.c_[q[:, 0], p[:, 1]*self.depth_scale+self.depth_offset, q[:, 1]]
+
+
+def asset():
+    return json.loads(ASSET.read_text(encoding='utf8'))
+
+
+def validate(studio, config):
+    points = np.array(list(config['eye_points'].values()), dtype=float)
+    if points.shape != (8, 3) or not np.isfinite(points).all() or np.max(np.abs(points)) > 2:
+        raise ValueError('目印に不正な座標があります。顔の向きと位置を画像で確認してください。')
+    for side, sign in [('L', 1), ('R', -1)]:
+        inner, outer, upper, lower = [np.array(config['eye_points']['eye'+name+side]) for name in ['Inner', 'Outer', 'Upper', 'Lower']]
+        width = (outer[0]-inner[0])*sign; height = upper[2]-lower[2]
+        if not .02 < width < .65 or not .01 < height < width*1.5 or inner[0]*sign < -.03:
+            raise ValueError('目頭・目尻・上下の目印が逆転または極端です。皮膚の縁へ戻してください。')
+    head = bpy.data.objects[config['object']]
+    skin = next(p for p in components(head.data) if config['skin_seed'] in p)
+    xyz = canonical(basis_world(head)[skin], config)
+    distances = [float(np.linalg.norm(xyz-p, axis=1).min()) for p in points]
+    if max(distances) > .16:
+        raise ValueError('目印が顔から離れています。正面と横で位置を直してください。')
+
+
+def fitted_states(donor, config):
+    neutral = np.array(donor['neutral'])
+    eye_names = list(config['eye_points'])
+    eye_xz = np.array([donor['landmarks'][n] for n in eye_names])
+    source_y = np.array([neutral[np.argmin(np.linalg.norm(neutral[:, [0, 2]]-p, axis=1)), 1] for p in eye_xz])
+    target_y = np.array([config['eye_points'][n][1] for n in eye_names])
+    mode = config.get('depth_mode', 'affine')
+    if mode == 'manual':
+        depth_scale, depth_offset = config.get('depth_scale', 1), config.get('depth_offset', 0)
+        method = 'manual'
+    elif mode in ['affine', 'handles']:
+        if np.ptp(source_y) < 1e-10:
+            depth_scale, depth_offset = 1.0, float(np.mean(target_y-source_y))
+            method = 'offset-only'
+        else:
+            depth_scale, depth_offset = np.linalg.lstsq(np.c_[source_y, np.ones(len(source_y))], target_y, rcond=None)[0]
+            method = 'least-squares'
+    else:
+        raise ValueError('depth_modeは affine / manual / handles を指定してください。')
+    if depth_scale < 0:
+        raise ValueError('奥行きの対応が反転しています。8点の前後を見て直してください。')
+    config['fitted_depth'] = dict(scale=float(depth_scale), offset=float(depth_offset), method=method)
+    names = list(donor['landmarks'])
+    warp = Warp([donor['landmarks'][n] for n in names], [config['landmarks'][n] for n in names], depth_scale, depth_offset)
+    states = [neutral, np.array(donor['blink'])]
+    result = [warp(p) for p in states]
+    if config.get('depth_mode', 'affine') == 'handles':
+        # Same continuous 3-D mapping for neutral and blink. Moving a handle in
+        # depth changes the local face curvature, not just a stored annotation.
+        xz = eye_xz
+        residual = target_y-source_y*depth_scale-depth_offset
+        poly = np.c_[np.ones(len(xz)), xz]
+        matrix = np.block([[Warp.kernel(np.linalg.norm(xz[:, None]-xz[None, :], axis=2))+np.eye(len(xz))*1e-7, poly], [poly.T, np.zeros((3, 3))]])
+        coeff = np.linalg.solve(matrix, np.r_[residual, np.zeros(3)])
+        for p, q in zip(states, result):
+            front = p[:, [0, 2]]
+            correction = np.c_[Warp.kernel(np.linalg.norm(front[:, None]-xz[None, :], axis=2)), np.ones(len(p)), front] @ coeff
+            # Preserve the successful affine-depth foundation. Full neutral rim
+            # projection can put the CLOSED lid behind a protruding static iris.
+            # Apply a modest curved correction, then judge profile/closed overlap.
+            q[:, 1] += np.clip(correction, -.06, .06)*config.get('depth_influence', .2)
+    if not all(np.isfinite(p).all() for p in result):
+        raise ValueError('フィットが不安定です。目印を確認してください。')
+    return [world(p, config) for p in result]
+
+
+def parts(studio, objects=None):
+    """Geometric connected components only; the agent assigns their meaning."""
+    names = objects if objects is not None else studio.state['objects']
+    result = []
+    for name in names:
+        obj = bpy.data.objects[name]
+        if obj.type != 'MESH' or name.startswith('EA_'):
+            continue
+        xyz = basis_world(obj)
+        for ids in components(obj.data):
+            number = len(result)+1
+            color = (*colorsys.hsv_to_rgb((number*.61803398875) % 1, .62, .95), 1)
+            result.append(dict(number=number, object=name, seed=ids[0], count=len(ids),
+                               bounds=[xyz[ids].min(0).tolist(), xyz[ids].max(0).tolist()], color=color))
+    studio.state['parts'] = result
+    studio.record('parts_list', objects=list(names), count=len(result))
+    return result
+
+
+def prepare(studio, object_name, skin_seed=None, config=None, reset=False):
+    config = dict(config or {})
+    obj = bpy.data.objects.get(object_name)
+    if obj is None or obj.type != 'MESH' or object_name not in studio.state['objects']:
+        raise ValueError('今回エージェントが確認した顔メッシュを指定してください。')
+    groups = components(obj.data)
+    if skin_seed is None:
+        if len(groups) != 1:
+            raise ValueError('皮膚として使う連結部品のseedを指定してください。list_blink_partsで番号と形を見られます。')
+        skin_seed = groups[0][0]
+    skin = next((p for p in groups if skin_seed in p), None)
+    if skin is None:
+        raise ValueError('指定した皮膚部品がありません。')
+    old = studio.state.get('mask', {})
+    if old and not reset and (old.get('object') != object_name or old.get('skin_seed') != skin_seed):
+        raise ValueError('対象を変える場合は reset=True を明示してください。現在のマスク補正を保持しています。')
+    if old and not reset:
+        commit_adjustment(studio)
+    xyz = basis_world(obj); frame_axes = axes(studio); oriented = xyz[skin] @ frame_axes.T
+    low, high = oriented.min(0), oriented.max(0); scale = (high[2]-low[2])*1.2
+    if scale < 1e-8:
+        raise ValueError('選んだ部品の上方向・大きさを確認してください。')
+    donor = asset(); neutral = np.array(donor['neutral'])
+    # Initial handles come only from the bundled mask, never from target eye detection.
+    initial = {n:neutral[np.argmin(np.linalg.norm(neutral[:, [0, 2]]-xz, axis=1))].tolist()
+               for n, xz in donor['landmarks'].items() if n.startswith('eye')}
+    settings = dict(object=object_name, skin_seed=skin_seed, center=((low+high)/2 @ frame_axes).tolist(),
+                    axes=frame_axes.tolist(), scale=float(scale), eye_points=initial,
+                    landmarks=donor['landmarks'], auto_anchors=True, followers=[], depth_mode='affine',
+                    status='points_need_placement', reviewed=False)
+    if old and not reset:
+        for name in ['offsets', 'eye_points', 'landmarks', 'auto_anchors', 'followers', 'depth_mode', 'depth_influence', 'depth_scale', 'depth_offset', 'region']:
+            if name in old:
+                settings[name] = old[name]
+    settings.update(config)
+    studio.state['mask'] = settings
+    build_handles(studio, reset_points=True)
+    # The initial mask is visible even before the target points have been placed.
+    fit(studio, from_handles=False, validate_points=False, capture_edits=False)
+    settings['status'] = 'points_need_placement'
+    studio.record('mask_prepared', object=object_name, skin_seed=skin_seed)
+    return settings
+
+
+def set_points(studio, points, space='WORLD'):
+    config = studio.state['mask']
+    if space not in ['WORLD', 'CANONICAL']:
+        raise ValueError('WORLD / CANONICAL を指定してください。')
+    for name, value in points.items():
+        if name not in config['eye_points'] or len(value) != 3 or not np.isfinite(value).all():
+            raise ValueError('8点と有限のxyz座標を指定してください: '+name)
+    for name, value in points.items():
+        co = canonical([value], config)[0] if space == 'WORLD' else np.array(value)
+        config['eye_points'][name] = co.tolist()
+        bpy.data.objects['EA_MaskPoint_'+name].location = world([co], config)[0]
+    config.update(status='points_changed', reviewed=False)
+    studio.record('mask_points_set', points=list(points), space=space)
+    return config['eye_points']
+
+
+def set_followers(studio, selections):
+    config = studio.state['mask']; result = []
+    for row in selections:
+        obj = bpy.data.objects[row['object']]
+        part = next((p for p in components(obj.data) if row['seed'] in p), None)
+        if part is None:
+            raise ValueError('指定した連結部品がありません。')
+        if obj.name == config['object'] and config['skin_seed'] in part:
+            raise ValueError('皮膚は既に転送対象です。追従部品と重ねて指定しません。')
+        item = dict(object=obj.name, seed=part[0], count=len(part), enabled=True)
+        if item not in result:
+            result.append(item)
+    config.update(followers=result, reviewed=False, status='fit_needs_review')
+    build_handles(studio)
+    studio.record('mask_followers_set', count=len(result))
+    return result
+
+
+def project_pixels(studio, points, angle='Front', snap_pixels=None):
+    """Orthographic image pixels -> raycast against ONLY the explicitly chosen skin.
+
+    Pixel origin is the top-left of the captured image. A hole/back-facing hit
+    raises unless the caller explicitly permits a nearby projected vertex snap.
+    """
+    config = studio.state['mask']; head = bpy.data.objects[config['object']]
+    ids = next(p for p in components(head.data) if config['skin_seed'] in p)
+    mapping = {i:j for j,i in enumerate(ids)}; xyz = basis_world(head)[ids]
+    faces = [[mapping[i] for i in p.vertices] for p in head.data.polygons if all(i in mapping for i in p.vertices)]
+    tree = BVHTree.FromPolygons(xyz.tolist(), faces)
+    center, front, up, right, scale = studio.frame()
+    degrees = dict(Front=0, Oblique45=45, Other45=-45, Profile90=90)
+    if angle not in degrees:
+        raise ValueError('固定撮影の方向を指定してください。')
+    rad = np.deg2rad(degrees[angle]); direction = front*float(np.cos(rad))+right*float(np.sin(rad))
+    right = up.cross(direction).normalized(); size = studio.state['camera']['size']
+    projected = np.c_[((xyz-np.array(center)) @ np.array(right)/scale+.5)*size-.5,
+                      (.5-(xyz-np.array(center)) @ np.array(up)/scale)*size-.5]
+    normal_matrix = head.matrix_world.to_3x3().inverted().transposed()
+    front_vertices = np.array([(normal_matrix @ head.data.vertices[i].normal).dot(direction) > .01 for i in ids])
+    result = {}
+    for name, pixel in points.items():
+        if name not in config['eye_points'] or len(pixel) != 2 or not np.isfinite(pixel).all():
+            raise ValueError('目印名と有限の画像px,pyを指定してください。')
+        x, y = pixel
+        location = center+right*((x+.5)/size-.5)*scale+up*(.5-(y+.5)/size)*scale
+        hit, normal, index, distance = tree.ray_cast(location+direction*scale*3, -direction, scale*6)
+        if hit is not None and normal.dot(direction) > .01:
+            result[name] = dict(world=list(hit), method='surface_ray', pixel=list(pixel), pixel_error=0)
+            continue
+        if snap_pixels is None:
+            raise ValueError('選んだ皮膚の前向き面へ当たりません: '+name+'。位置を直すかsnap_pixelsを明示してください。')
+        screen_distance = np.linalg.norm(projected-np.array(pixel), axis=1)
+        screen_distance[~front_vertices] = np.inf
+        nearest = float(screen_distance.min())
+        if nearest > snap_pixels:
+            raise ValueError('指定範囲に皮膚の頂点がありません: '+name+' ('+str(round(nearest, 1))+'px)')
+        near = np.flatnonzero(screen_distance <= nearest+.25)
+        chosen = int(near[np.argmax(xyz[near] @ np.array(direction))])
+        result[name] = dict(world=xyz[chosen].tolist(), method='vertex_snap', pixel=list(pixel),
+                            pixel_error=float(screen_distance[chosen]), vertex=ids[chosen])
+    return result
+
+
+def select_part(studio, object_name, seed):
+    if bpy.context.object and bpy.context.object.mode == 'EDIT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+    obj = bpy.data.objects[object_name]
+    chosen = next(p for p in components(obj.data) if seed in p)
+    for selected in bpy.context.selected_objects:
+        selected.select_set(False)
+    obj.hide_set(False); obj.select_set(True); bpy.context.view_layer.objects.active = obj
+    for vertex in obj.data.vertices:
+        vertex.select = vertex.index in chosen
+    bpy.context.scene.tool_settings.mesh_select_mode = (True, False, False)
+    bpy.ops.object.mode_set(mode='EDIT')
+    return chosen
+
+
+def capture_parts(studio, objects=None, angles=None):
+    rows = parts(studio, objects)
+    temporary, labels = [], []
+    original = studio.state['render_objects']
+    try:
+        for row in rows:
+            source = bpy.data.objects[row['object']]
+            chosen = next(p for p in components(source.data) if row['seed'] in p)
+            mapping = {i:j for j,i in enumerate(chosen)}; xyz = basis_world(source)[chosen]
+            mesh = bpy.data.meshes.new('EA_PartView'); mesh.from_pydata(xyz.tolist(), [], [[mapping[i] for i in p.vertices] for p in source.data.polygons if all(i in mapping for i in p.vertices)])
+            obj = bpy.data.objects.new('EA_PartView', mesh); bpy.context.scene.collection.objects.link(obj)
+            obj.color = row['color']; temporary.append(obj)
+            text = bpy.data.curves.new('EA_PartLabel', 'FONT'); text.body = str(row['number']); text.align_x = 'CENTER'
+            label = bpy.data.objects.new('EA_PartLabel', text); bpy.context.scene.collection.objects.link(label); labels.append(label)
+            center, front, up, right, scale = studio.frame()
+            text.size = scale*.014; label.matrix_world = Matrix((right, up, front)).transposed().to_4x4()
+            label.location = Vector(xyz.mean(0))+front*scale*.012+up*scale*.012
+            label.color = (1, 1, 1, 1)
+        studio.state['render_objects'] = [o.name for o in temporary]
+        shot = studio.capture('blink', 0, display='fit', label='connected-parts', angles=angles or ['Front'])
+        studio.state['part_capture'] = shot
+        return shot
+    finally:
+        studio.state['render_objects'] = original
+        for obj in temporary:
+            mesh = obj.data; bpy.data.objects.remove(obj, do_unlink=True); bpy.data.meshes.remove(mesh)
+        for obj in labels:
+            curve = obj.data; bpy.data.objects.remove(obj, do_unlink=True); bpy.data.curves.remove(curve)
+        studio.record('parts_capture')
+
+
+def build_handles(studio, reset_points=False):
+    config = studio.state['mask']
+    for name, co in config['eye_points'].items():
+        obj = bpy.data.objects.get('EA_MaskPoint_'+name)
+        created = obj is None
+        if obj is None:
+            obj = bpy.data.objects.new('EA_MaskPoint_'+name, None); bpy.context.scene.collection.objects.link(obj)
+        if created or reset_points:
+            obj.location = world([co], config)[0]
+            obj.hide_set(False)
+        obj.empty_display_type = 'SPHERE'; obj.empty_display_size = config['scale']*.012
+        obj.show_in_front = True; obj.show_name = True; obj.hide_render = True
+        obj['expression_mask_handle'] = name
+    for obj in list(bpy.data.objects):
+        if obj.name.startswith('EA_MaskFollower_'):
+            bpy.data.objects.remove(obj, do_unlink=True)
+    for i, follower in enumerate(config['followers']):
+        obj = bpy.data.objects.get('EA_MaskFollower_'+str(i))
+        if obj is None:
+            obj = bpy.data.objects.new('EA_MaskFollower_'+str(i), None); bpy.context.scene.collection.objects.link(obj)
+        obj['enabled'] = follower.get('enabled', True)
+        obj['selection'] = follower['object']+' / '+str(follower['count'])+' vertices'
+        obj['part_number'] = i+1
+        source = bpy.data.objects[follower['object']]
+        part = next(p for p in components(source.data) if follower['seed'] in p)
+        obj.location = basis_world(source)[part].mean(0)
+        obj.empty_display_type = 'CUBE'; obj.empty_display_size = config['scale']*.008
+        obj.show_in_front = True; obj.show_name = True; obj.hide_render = True
+
+
+def write_mask(studio, rest, closed, poses=None):
+    config = studio.state['mask']; mask = bpy.data.objects.get('EA_MaskSkin')
+    if mask is None:
+        mesh = bpy.data.meshes.new('EA_MaskSkin'); mesh.from_pydata(rest.tolist(), [], asset()['faces']); mesh.update()
+        # Fit can make a quad concave. Triangulate the disposable driver only,
+        # preserving every vertex index and all original recipient polygons.
+        mesh.calc_loop_triangles(); triangles = [list(t.vertices) for t in mesh.loop_triangles]
+        mesh.clear_geometry(); mesh.from_pydata(rest.tolist(), [], triangles); mesh.update()
+        mask = bpy.data.objects.new('EA_MaskSkin', mesh); bpy.context.scene.collection.objects.link(mask)
+        mask.shape_key_add(name='Basis'); mask.shape_key_add(name='blink')
+    mask.matrix_world = Matrix.Identity(4)
+    for key, points in dict(Basis=rest, blink=closed, **{n:p for n,p in (poses or {}).items() if n != 'blink'}).items():
+        if key not in mask.data.shape_keys.key_blocks: mask.shape_key_add(name=key)
+        mask.data.shape_keys.key_blocks[key].value = 0
+        for vertex, co in zip(mask.data.shape_keys.key_blocks[key].data, points):
+            vertex.co = co
+    mask.data.shape_keys.key_blocks['blink'].value = 0
+    mask.show_only_shape_key = False
+    mask.data.update(); mask.update_tag(refresh={'DATA'}); bpy.context.view_layer.update()
+    evaluated = mask.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    error = float(np.max(np.abs(np.array([v.co for v in evaluated.data.vertices])-rest)))
+    if error > config['scale']*1e-5:
+        raise ValueError('マスクの通常顔が更新されていません。転送を停止しました。')
+    # Compare future edits with the actual float32 mesh, not pre-write doubles.
+    config['written_neutral'] = canonical(basis_world(mask), config).tolist()
+    config['bind_rest_error'] = error
+    mask.display_type = 'WIRE'; mask.show_in_front = True; mask.hide_render = True; mask.hide_select = True; mask.hide_set(False)
+    return mask
+
+
+def commit_adjustment(studio):
+    """Keep a direct neutral-mask edit as one offset applied to BOTH poses."""
+    config = studio.state['mask']; mask = bpy.data.objects.get('EA_MaskSkin')
+    if mask is None or 'written_neutral' not in config:
+        return None
+    if bpy.context.object and bpy.context.object.mode == 'EDIT':
+        bpy.ops.object.mode_set(mode='OBJECT')
+    current = canonical(basis_world(mask), config)
+    change = current-np.array(config['written_neutral'])
+    if np.max(np.abs(change)) < 1e-8:
+        return mask
+    offsets = np.array(config.get('offsets', np.zeros_like(change)))+change
+    config['offsets'] = offsets.tolist()
+    delta = change*config['scale'] @ np.array(config['axes'])
+    rest = world(current, config)
+    closed = np.array([mask.matrix_world @ v.co for v in mask.data.shape_keys.key_blocks['blink'].data])+delta
+    poses = {k.name:np.array([mask.matrix_world @ v.co for v in k.data])+delta for k in mask.data.shape_keys.key_blocks if k.name not in ['Basis','blink']}
+    mask = write_mask(studio, rest, closed, poses)
+    config.update(status='fit_needs_review', reviewed=False)
+    studio.record('mask_adjustment_kept', maximum_offset=float(np.max(np.abs(offsets))))
+    return mask
+
+
+def fit(studio, from_handles=True, validate_points=True, capture_edits=True):
+    config = studio.state['mask']; donor = asset()
+    if capture_edits:
+        commit_adjustment(studio)
+    if from_handles:
+        bpy.context.view_layer.update()
+        for name in config['eye_points']:
+            obj = bpy.data.objects.get('EA_MaskPoint_'+name)
+            if obj is None:
+                raise ValueError('目印がありません。prepare_blinkで作成してください。')
+            co = canonical([obj.matrix_world.translation], config)[0]
+            config['eye_points'][name] = co.tolist()
+    names = list(config['eye_points'])
+    if config.get('auto_anchors', True):
+        source = np.array([donor['landmarks'][n] for n in names])
+        target = np.array([config['eye_points'][n] for n in names])[:, [0, 2]]
+        affine = np.linalg.lstsq(np.c_[source, np.ones(len(source))], target, rcond=None)[0]
+        config['landmarks'] = {name:(np.r_[co, 1] @ affine).tolist() for name, co in donor['landmarks'].items()}
+    config['landmarks'].update({n:config['eye_points'][n][::2] for n in names})
+    if validate_points:
+        validate(studio, config)
+    rest, closed = fitted_states(donor, config)
+    poses = {name:fitted_states(dict(donor, blink=points), config)[1] for name,points in donor.get('poses', {}).items()}
+    if 'offsets' in config:
+        offset = np.array(config['offsets'])*config['scale'] @ np.array(config['axes'])
+        rest += offset; closed += offset
+        poses = {n:p+offset for n,p in poses.items()}
+    mask = write_mask(studio, rest, closed, poses)
+    config.update(status='fit_needs_review', reviewed=False)
+    config.pop('fit_error', None)
+    studio.record('mask_fit', bind_rest_error=config['bind_rest_error'])
+    return mask
+
+
+def reset_adjustment(studio):
+    config = studio.state['mask']; config.pop('offsets', None)
+    config.pop('written_neutral', None)
+    return fit(studio, capture_edits=False)
+
+
+def capture_fit(studio, angles=None):
+    config = studio.state['mask']; mask = bpy.data.objects.get('EA_MaskSkin')
+    curve = bpy.data.curves.new('EA_MaskOverlay', 'CURVE'); curve.dimensions = '3D'; curve.bevel_depth = config['scale']*.00065
+    eye_vertices = set(i for part in boundaries(mask.data, range(len(mask.data.vertices))) if len(part) < 80 for i in part) if mask else set()
+    for edge in mask.data.edges if mask else []:
+        if not all(i in eye_vertices for i in edge.vertices):
+            continue
+        spline = curve.splines.new('POLY'); spline.points.add(1)
+        for point, i in zip(spline.points, edge.vertices):
+            point.co = (*mask.data.shape_keys.key_blocks[0].data[i].co, 1)
+    overlay = bpy.data.objects.new('EA_MaskOverlay', curve); bpy.context.scene.collection.objects.link(overlay)
+    overlay.color = (1, .10, .45, 1)
+    temporary, labels = [], []
+    original_render = studio.state['render_objects']
+    head = bpy.data.objects[config['object']]; color = tuple(head.color)
+    head.color = (.58, .62, .67, 1)
+    try:
+        for point in config['eye_points'].values():
+            center = Vector(world([point], config)[0]); radius = config['scale']*.006
+            vertices = [center+Vector(d)*radius for d in [(1,0,0),(-1,0,0),(0,1,0),(0,-1,0),(0,0,1),(0,0,-1)]]
+            faces = [(a,b,c) for a in [0,1] for b in [2,3] for c in [4,5]]
+            mesh = bpy.data.meshes.new('EA_FitPoint'); mesh.from_pydata(vertices, [], faces)
+            obj = bpy.data.objects.new('EA_FitPoint', mesh); bpy.context.scene.collection.objects.link(obj); obj.color = (.05, 1, .9, 1); temporary.append(obj)
+        for i, selection in enumerate(config['followers']):
+            marker = bpy.data.objects.get('EA_MaskFollower_'+str(i))
+            if not (marker.get('enabled', True) if marker else selection.get('enabled', True)):
+                continue
+            source = bpy.data.objects[selection['object']]; part = next(p for p in components(source.data) if selection['seed'] in p)
+            mapping = {i:j for j,i in enumerate(part)}; points = basis_world(source)
+            mesh = bpy.data.meshes.new('EA_FitLash'); mesh.from_pydata(points[part].tolist(), [], [[mapping[i] for i in p.vertices] for p in source.data.polygons if all(i in mapping for i in p.vertices)])
+            obj = bpy.data.objects.new('EA_FitLash', mesh); bpy.context.scene.collection.objects.link(obj); obj.color = (1, .55, .08, 1); temporary.append(obj)
+            text = bpy.data.curves.new('EA_FitLabel', 'FONT'); text.body = str(i+1); text.size = config['scale']*.016; text.align_x = 'CENTER'
+            label = bpy.data.objects.new('EA_FitLabel', text); bpy.context.scene.collection.objects.link(label); labels.append(label)
+            right, back, up = [Vector(axis) for axis in config['axes']]
+            label.matrix_world = Matrix((right, up, -back)).transposed().to_4x4()
+            label.location = Vector(points[part].mean(0))-back*config['scale']*.02+up*config['scale']*.018
+            label.color = (1, .55, .08, 1)
+        studio.state['render_objects'] = [head.name]+[o.name for o in temporary]
+        shot = studio.capture('blink', 0, display='fit', label='mask-fit', angles=angles or ['Front'])
+        config['fit_capture'] = shot
+        return shot
+    finally:
+        studio.state['render_objects'] = original_render; head.color = color
+        for obj in temporary:
+            mesh = obj.data; bpy.data.objects.remove(obj, do_unlink=True); bpy.data.meshes.remove(mesh)
+        for obj in labels:
+            curve_data = obj.data; bpy.data.objects.remove(obj, do_unlink=True); bpy.data.curves.remove(curve_data)
+        bpy.data.objects.remove(overlay, do_unlink=True); bpy.data.curves.remove(curve)
+        studio.record('mask_fit_capture')
+
+
+def transfer(studio, reviewed=False, expressions=None):
+    config = studio.state['mask']
+    expressions = list(expressions or ['blink'])
+    if any(n not in asset().get('poses', {'blink':None}) for n in expressions): raise ValueError('Unknown eye expression')
+    if not reviewed:
+        raise ValueError('通常顔とマスクの目縁・奥行き、選んだ追従部品を見てから reviewed=True で転送してください。')
+    if config.get('status') == 'baked':
+        raise ValueError('転送済みです。仕上げを置き換える場合は必要箇所を調整・再fitしてから明示的に再転送してください。')
+    studio.audit()
+    mask = fit(studio)
+    head = bpy.data.objects[config['object']]
+    head_parts = components(head.data); skin = next(p for p in head_parts if config['skin_seed'] in p)
+    eyes = np.array(list(config['eye_points'].values())); zlo, zhi = eyes[:, 2].min(), eyes[:, 2].max(); height = max(zhi-zlo, .06)
+    region = config.get('region', dict(bottom=float(zlo-height*.7), top=float(zhi+height*.9), fade=float(height*.5), back=float(np.median(eyes[:, 1])+height*1.2), depth_fade=float(height*.7)))
+    config['effective_region'] = dict(region)
+    recipients = {head.name: {i: 0.0 for i in skin}}
+    points = canonical(basis_world(head), config)
+    for i in skin:
+        _, y, z = points[i]
+        recipients[head.name][i] = float(min(np.clip((z-region['bottom'])/region['fade'], 0, 1), np.clip((region['top']-z)/region['fade'], 0, 1), np.clip((region['back']-y)/region['depth_fade'], 0, 1)))
+    for i, follower in enumerate(config['followers']):
+        marker = bpy.data.objects.get('EA_MaskFollower_'+str(i))
+        if marker:
+            follower['enabled'] = bool(marker.get('enabled', True))
+        if not follower.get('enabled', True):
+            continue
+        obj = bpy.data.objects[follower['object']]
+        part = next(p for p in components(obj.data) if follower['seed'] in p)
+        recipients.setdefault(obj.name, {}).update({i: 1.0 for i in part})
+    stored = [(o, [(k.name, k.value) for k in o.data.shape_keys.key_blocks]) for o in studio.objects]
+    for obj, keys in stored:
+        for name, _ in keys:
+            obj.data.shape_keys.key_blocks[name].value = 0
+    results, pending = [], []
+    try:
+        for name, weights in recipients.items():
+            obj = bpy.data.objects[name]
+            if name not in studio.state['keys']['blink']:
+                studio.include_object(obj)
+            for expression in expressions: studio.ensure_expression(expression)
+            before = np.array([v.co for v in obj.data.shape_keys.key_blocks[0].data])
+            # Bake only native Surface Deform; exclude armature/other modifiers.
+            enabled = [(m, m.show_viewport) for m in obj.modifiers]
+            group = obj.vertex_groups.new(name='EA_MaskTemporary')
+            modifier = None
+            try:
+                for m, _ in enabled:
+                    m.show_viewport = False
+                for i, weight in weights.items():
+                    if weight > 0:
+                        group.add([i], weight, 'REPLACE')
+                modifier = obj.modifiers.new('EA_MaskTemporary', 'SURFACE_DEFORM'); modifier.target = mask
+                modifier.vertex_group = group.name; modifier.falloff = 4
+                bpy.context.view_layer.objects.active = obj
+                mask.data.shape_keys.key_blocks['blink'].value = 0
+                mask.data.update(); mask.update_tag(refresh={'DATA'}); bpy.context.view_layer.update()
+                bpy.ops.object.surfacedeform_bind(modifier=modifier.name)
+                if not modifier.is_bound:
+                    raise ValueError('Surface Deformを接続できません: '+name)
+                def evaluated(expression=None):
+                    for pose in mask.data.shape_keys.key_blocks: pose.value = float(pose.name == expression)
+                    mask.data.update(); mask.update_tag(refresh={'DATA'}); bpy.context.view_layer.update()
+                    mesh = obj.evaluated_get(bpy.context.evaluated_depsgraph_get()).data
+                    if len(mesh.vertices) != len(before):
+                        raise ValueError('頂点数が変わりました: '+name)
+                    return np.array([v.co for v in mesh.vertices])
+                neutral = evaluated()
+                for expression in expressions:
+                    posed = evaluated(expression); returned = evaluated()
+                    error = float(max(np.max(np.abs(neutral-before)), np.max(np.abs(returned-before))))
+                    if error > config['scale']*1e-5:
+                        raise ValueError('通常顔へ戻らないため転送を停止しました: '+name)
+                    key = obj.data.shape_keys.key_blocks[studio.state['keys'][expression][name]]
+                    pending.append((key, before+(posed-neutral)))
+                    results.append(dict(object=name, vertices=sum(w > 0 for w in weights.values()), neutral_error=error, key=key.name))
+            finally:
+                if modifier:
+                    obj.modifiers.remove(modifier)
+                obj.vertex_groups.remove(group)
+                for m, value in enabled:
+                    m.show_viewport = value
+    finally:
+        for obj, keys in stored:
+            for name, value in keys:
+                obj.data.shape_keys.key_blocks[name].value = value
+        mask.data.shape_keys.key_blocks['blink'].value = 0
+        mask.hide_set(True); bpy.context.view_layer.update()
+    # Commit every recipient together; a later failed bind leaves earlier keys intact.
+    for key, coordinates in pending:
+        for vertex, co in zip(key.data, coordinates):
+            vertex.co = co
+    config.update(status='baked', reviewed=True, transfer=results, expressions=expressions)
+    for obj in bpy.data.objects:
+        if obj.name.startswith(('EA_MaskPoint_', 'EA_MaskFollower_')):
+            obj.hide_set(True)
+    studio.audit(); studio.record('mask_baked', recipients=results)
+    studio.expression('blink', 1)
+    bpy.context.view_layer.objects.active = head
+    return results

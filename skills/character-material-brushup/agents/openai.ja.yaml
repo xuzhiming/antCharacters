@@ -1,0 +1,4 @@
+interface:
+  display_name: "立ち絵の塗りへブラッシュアップ"
+  short_description: "顔・髪・衣装の形を保ち、色の層と材質ごとの艶で完成した立ち絵へ仕上げます"
+  default_prompt: "$character-material-brushup を使い、完成作品の塗りを観察・言語化して、この素材の顔・髪・衣装を共通の品質基準で仕上げてください。"

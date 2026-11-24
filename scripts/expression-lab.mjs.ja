@@ -1,0 +1,66 @@
+#!/usr/bin/env node
+// Preparation and a read-only viewer. Shape editing happens in live Blender.
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import http from 'node:http';
+import {spawn} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {randomUUID} from 'node:crypto';
+import {findBlender,sameOrigin} from '../server-jobs.mjs';
+import {unpackProject} from '../public/project.mjs';
+import {expressionSourceStamp} from '../public/expression-authoring.mjs';
+import {importedExpressionModel} from '../public/expression-editor-data.mjs';
+import {digest} from './project-write.mjs';
+const root=path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const helper=path.join(root,'scripts','expression-studio.py');
+const json=async file=>JSON.parse(await fs.readFile(file,'utf8'));
+export async function blenderExecutable(explicit){const executable=explicit||await findBlender();if(!executable)throw Error('Blender 5.2以降を指定してください（--blender / BLENDER）。');return executable;}
+export async function initializeLab(input,work,{config={},blender,project}={}){
+ input=path.resolve(input);work=path.resolve(work);await fs.mkdir(work,{recursive:true});
+ if(await fs.stat(path.join(work,'session.json')).then(()=>true,()=>false))throw Error('制作済みフォルダーです。openで再開してください。');
+ let link;
+ if(project){const bytes=await fs.readFile(project),{project:p}=await unpackProject(bytes),hash=digest(await fs.readFile(input));if(p.springSetup?.blendHash!==hash&&importedExpressionModel(p)?.sha256!==hash)throw Error('現在のwork/character.blend、または表情タブに読み込んだモデルを入力にしてください。');link={project:path.resolve(project),projectHash:digest(bytes),sourceStamp:expressionSourceStamp(p)};}
+ const settings=path.join(work,'prepare-'+randomUUID()+'.json');await fs.writeFile(settings,JSON.stringify(config));
+ try{
+  const exe=await blenderExecutable(blender);
+  await new Promise((resolve,reject)=>{const child=spawn(exe,['--background','--factory-startup','--disable-autoexec','--python-exit-code','1','--python',helper,'--','prepare',input,work,settings],{shell:false,windowsHide:true,stdio:['ignore','pipe','pipe']});let tail='';for(const stream of [child.stdout,child.stderr])stream.on('data',d=>{tail=(tail+d).slice(-5000);});child.on('error',reject);child.on('exit',code=>code===0?resolve():reject(Error(tail)));});
+  if(link)await fs.writeFile(path.join(work,'project-link.json'),JSON.stringify(link,null,2));
+  return {work,blend:path.join(work,'current.blend'),next:'Open the working Blend in Blender. Compare → edit visually → compare again.'};
+ }finally{await fs.rm(settings,{force:true});}
+}
+export async function openStudio(work,{blender}={}){
+ work=path.resolve(work);const state=await json(path.join(work,'session.json'));if(state.version!==2)throw Error('旧試行は比較画面で参照できます。新方式の制作コピーは別フォルダーへ準備してください。');
+ const child=spawn(await blenderExecutable(blender),[path.join(work,'current.blend'),'--python',helper,'--','attach',work],{shell:false,windowsHide:true,detached:true,stdio:'ignore'});await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref();return {work,opened:true};
+}
+export async function runningLab(work){try{const saved=await json(path.join(work,'server.json'));if(!/^http:\/\/127\.0\.0\.1:\d+$/.test(saved.url))return null;const response=await fetch(saved.url+'/api/state',{signal:AbortSignal.timeout(1200)}),state=await response.json();return response.ok&&state.work===path.resolve(work)?saved:null;}catch{return null;}}
+const mime={'.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml'};
+export async function serveLab(work,{port=0}={}){
+ work=path.resolve(work);await json(path.join(work,'session.json'));const running=await runningLab(work);if(running)return {url:running.url,close:async()=>{}};
+ const server=http.createServer(async(req,res)=>{
+  const send=(status,value,type='application/json')=>{res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(typeof value==='string'||value instanceof Uint8Array?value:JSON.stringify(value));};
+  try{
+   if(!sameOrigin(req))return send(403,{error:'Local access only'});const url=new URL(req.url,'http://127.0.0.1');
+   if(req.method!=='GET')return send(405,{error:'編集はBlenderで行います。'});
+   if(url.pathname==='/api/state'){const state=await json(path.join(work,'session.json'));state.targets=await json(path.join(work,'targets.json')).catch(()=>state.targets);return send(200,{...state,work});}
+   const base=url.pathname.startsWith('/files/')?work:path.join(root,'public/expression-lab');
+   const rel=decodeURIComponent(url.pathname.startsWith('/files/')?url.pathname.slice(7):url.pathname==='/'?'index.html':url.pathname.slice(1));const file=path.resolve(base,rel);if(!file.startsWith(base+path.sep))return send(403,{error:'Invalid path'});
+   send(200,await fs.readFile(file),mime[path.extname(file)]||'application/octet-stream');
+  }catch(error){send(404,{error:error.message});}
+ });
+ await new Promise(resolve=>server.listen(port,'127.0.0.1',resolve));const url='http://127.0.0.1:'+server.address().port;await fs.writeFile(path.join(work,'server.json'),JSON.stringify({url,work}));return {url,close:()=>new Promise(resolve=>server.close(resolve))};
+}
+export async function addTarget(work,expression,angle,file,{prompt=''}={}){
+ if(!/^[_a-zA-Z0-9]{1,80}$/.test(expression)||!['Front','Oblique45','Profile90','Other45'].includes(angle))throw Error('表情・方向を確認してください。');
+ const state=await json(path.join(work,'session.json')),extension=path.extname(file).toLowerCase();if(!['.png','.jpg','.webp'].includes(extension))throw Error('PNG/JPG/WebPを指定してください。');
+ const targets=await json(path.join(work,'targets.json')).catch(()=>state.targets);
+ const relative=`targets/${expression}-${angle}-${randomUUID()}${extension}`;await fs.copyFile(file,path.join(work,relative));targets[expression]??={};targets[expression][angle]={path:relative,prompt};await fs.writeFile(path.join(work,'targets.json'),JSON.stringify(targets,null,2));return {path:relative};
+}
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+ const args=process.argv.slice(2),command=args.shift(),option=name=>{const i=args.indexOf('--'+name);if(i<0)return;const value=args[i+1];args.splice(i,2);return value;};const blender=option('blender'),project=option('project'),config=option('config');
+ if(command==='init')console.log(JSON.stringify(await initializeLab(args[0],args[1],{blender,project,config:config?await json(config):{}})));
+ else if(command==='open')console.log(JSON.stringify(await openStudio(args[0],{blender})));
+ else if(command==='serve')console.log(JSON.stringify({url:(await serveLab(args[0])).url}));
+ else if(command==='target')console.log(JSON.stringify(await addTarget(...args)));
+ else if(command==='register'){const {registerExpressions}=await import('./update-expression-authoring.mjs');console.log(JSON.stringify(await registerExpressions(args[0],args[1])));}
+ else throw Error('init INPUT WORK [--config FILE] [--project PROJECT] / open WORK / serve WORK / target WORK EXPR ANGLE IMAGE / register WORK PROJECT');
+}

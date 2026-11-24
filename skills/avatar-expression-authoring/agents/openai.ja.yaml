@@ -1,0 +1,4 @@
+interface:
+  display_name: "表情を可愛く仕上げる"
+  short_description: "Blenderを見ながら編集し、お手本へ近づくまで見た目の比較と調整を続けます"
+  default_prompt: "$avatar-expression-authoring を使い、Blenderを見ながら編集して、お手本に沿う綺麗で可愛い目・口・眉の表情へ仕上げてください。"

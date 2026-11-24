@@ -1,0 +1,1362 @@
+{
+  "product": "Charakuru",
+  "version": "1.1.0",
+  "files": [
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "fab0031b1a715dfa4975c97363cab3c32588e3cfc71edc809289dc3aa137de0d"
+    },
+    {
+      "path": "docs/images/zh-CN/01-start.png",
+      "sha256": "ee9f8a30845f62c989e72865f1fc9743f0d1928434baa721be81b84d583df7f7"
+    },
+    {
+      "path": "docs/images/zh-CN/20-settings.png",
+      "sha256": "49268efb8091319e034efd71af1d921b4101a19e1e2ad1e4f4d5dbe7fe4d60a5"
+    },
+    {
+      "path": "README.zh-CN.md",
+      "sha256": "55b81e20e3f8c848c55b0d6bc4735314716dc804f946e6de4fdf0b5098838d6c"
+    },
+    {
+      "path": "docs/tutorial.zh-CN.md",
+      "sha256": "3f68f15a88e273796a26f10e415eaaebf994827e4ecd13ff7e255c6a0e32b1a1"
+    },
+    {
+      "path": "docs/browser-use.zh-CN.md",
+      "sha256": "667a56e333529c62b8f9f297b5844c637b177a053f43bf654b4dffdc8f1e4b39"
+    },
+    {
+      "path": "docs/preview-user.zh-CN.md",
+      "sha256": "27f61e94b6fc7f5a83bf16c5be33dc4c40ad68982a735bb3576658decf18a11e"
+    },
+    {
+      "path": "docs/license.zh-CN.md",
+      "sha256": "ab4cbdf27b9cc4f3cac9e2ae006ed35a25b6631ad9af085c0bcca27a5a77218a"
+    },
+    {
+      "path": "docs/getting-started.zh-CN.md",
+      "sha256": "ea4fa801c7932003a4ee126ed753c1f02934df612d37d3f09253ebfbac08bf68"
+    },
+    {
+      "path": "public/translations-zh.mjs",
+      "sha256": "a50586b91dc5b92a7de126c186c2201800aeccc1d8b787d1c8bc21e090515abf"
+    },
+    {
+      "path": "public/runtime-translations.mjs",
+      "sha256": "8014e66e32271a8b1e1c9ac56f0a83f6da09d997e5cc40b758f6616e0c1f6ade"
+    },
+    {
+      "path": "public/handoff-zh.mjs",
+      "sha256": "5c7d7df340bd8bee2638937fb32a8a758a688f4198e1a09938ae3b2202b6b038"
+    },
+    {
+      "path": "public/session-prompt-localized.mjs",
+      "sha256": "81ae71f3b371372ca9508589e7ff6282807889f86ed5901e9d6150029574fa82"
+    },
+    {
+      "path": "server.mjs",
+      "sha256": "73d63be859986ec5f12d55406688e6938c8052af528ee547b1b8b4b02975f516"
+    },
+    {
+      "path": "server-config.mjs",
+      "sha256": "50c8033a5df1b4152a6ca0d3a13ac0c46ae321eefade95ba86b2811ede01e3f3"
+    },
+    {
+      "path": "server-jobs.mjs",
+      "sha256": "f7fcb4070efe1dd0f253ab1e22c23cd948d20a92d5cb8a907c288600326fc432"
+    },
+    {
+      "path": "server-production.mjs",
+      "sha256": "a8d1ae0a8db203a1aef8dd684310d7926afeb072dd71d2cfa14806aefbfb0f62"
+    },
+    {
+      "path": "server-session.mjs",
+      "sha256": "6bf44947051486591ae4a928fef1f7c4781c2904bbd6593341b6f034d8e38d96"
+    },
+    {
+      "path": "server-expression-authoring.mjs",
+      "sha256": "71046396ffe96dff4836de9d9f76ddde36ceda77722ae87937b041b77f2b7d1b"
+    },
+    {
+      "path": "scripts/expression-lab.mjs",
+      "sha256": "c47f80414088a4ccb214072416526fdeb78e5dcf0722d3c8b35fd429d9a302b6"
+    },
+    {
+      "path": "scripts/expression-studio.py",
+      "sha256": "d713f5b390bfdcfd600af26704837ab5da87865dc8242d450660b006a360d3ad"
+    },
+    {
+      "path": "scripts/expression-mask.py",
+      "sha256": "f594b59ed23bfa100952144ddaa405f028f2fc90f643c5db0a165634046ad41e"
+    },
+    {
+      "path": "scripts/expression-transfer.py",
+      "sha256": "ee004bb5d8948c2d4167f55199af741680766ec2710ed2c20b7b15fe1e938865"
+    },
+    {
+      "path": "assets/expression-authoring/feature-poses.json",
+      "sha256": "974f816529dc8a2cb67632a6b996d9b63e23812626cf9a3fe88d2367ce2f13ff"
+    },
+    {
+      "path": "assets/expression-authoring/pose-guide.png",
+      "sha256": "6174d78c9c80407c74e17e79381b154f2aadb1284038aa7a384b762a593ffe05"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/references/transfer.md",
+      "sha256": "d5a16a5b5fc6eccbeeb419e0eaf983f0983623fce0b16678a742c1d5f598582f"
+    },
+    {
+      "path": "scripts/update-expression-authoring.mjs",
+      "sha256": "f2256c34726c5e98a23b72dedf300f502e604b4ef20309a00398383b94463fb1"
+    },
+    {
+      "path": "public/expression-authoring.mjs",
+      "sha256": "a139e5b42f233cb11508bd491ea1a0f64227724f66d5dcf56ecdb51831678247"
+    },
+    {
+      "path": "public/expression-editor-data.mjs",
+      "sha256": "1f04ae16e218b4eff09f79fd64a152b8400d853e5a51c53c99fd07bd3d18e4bf"
+    },
+    {
+      "path": "public/expression-editor-ui.mjs",
+      "sha256": "16e4e65aebd0070f14686c28e73c092f24627dbe7b507bd58bc71f6ccd7788c0"
+    },
+    {
+      "path": "public/expression-preview.mjs",
+      "sha256": "a3ba532c85da25c320395c9cd510f28d647c6eede6389946672e546c4f1a3283"
+    },
+    {
+      "path": "public/expression-editor.css",
+      "sha256": "a42659e986903a54835cdf87fef5ee299f499b7f692c19f5cfaa03ccb7ef1348"
+    },
+    {
+      "path": "public/expression-lab/index.html",
+      "sha256": "103aebc69e48110ec98738a7c664a940d1a14c4888ae0c4556e529df86e943aa"
+    },
+    {
+      "path": "public/expression-lab/lab.mjs",
+      "sha256": "5b99ac7ccd0672d30e756ff2c42993345d18242b96fdfe9daba1e96a81bd5a50"
+    },
+    {
+      "path": "public/expression-lab/lab.css",
+      "sha256": "e345737e2a83516e3a5e7d5fbc568c4ded7cbcf6de55c0fc16c82b226ddeac15"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/SKILL.md",
+      "sha256": "989fd487aafd8cde1a521bbff924dea602e8fbc2a1b5e07f2776bf0944334cbe"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/agents/openai.yaml",
+      "sha256": "a53f92c252cf34a8d209824fad2f02544cfbf8ba94b32203541b25c39f829e43"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/references/anatomy.md",
+      "sha256": "98b3f9ba01d74fa09137557b7fb979ebdeb05b3ec04b71809c5b230588b6a492"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/references/diagnostics.md",
+      "sha256": "dd57f61deae14c31db33c43f9c7bee28c6520f25a2dbc1c93d5af6ab89f378b9"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/references/commands.md",
+      "sha256": "049a4b34c36d732dbaadc25db1148a1cf317ad078824903b94bb68c143804267"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/references/visual-quality.md",
+      "sha256": "f95788b1b049ddd280d9c7a54eab91e83ec56df9b61256a7df006a8a4c81566d"
+    },
+    {
+      "path": "assets/expression-authoring/deformation-guide.svg",
+      "sha256": "3c0521ee5d294ae46e510a7ceff97e272bc3d0ccac7bbfde542990aa60716419"
+    },
+    {
+      "path": "assets/expression-authoring/skin-blink-mask.json",
+      "sha256": "74abe16e2b7362659e72e68e11cebbdd85fb626d35156201f4f4fea71529160f"
+    },
+    {
+      "path": "assets/expression-authoring/make-demo.py",
+      "sha256": "e661e1e3f40d9204d27f4eef072d02f25cc0566ea6c4239b18ee40a9b665de56"
+    },
+    {
+      "path": "docs/expression-authoring.ja.md",
+      "sha256": "d03bfab8f9565a9af809d989305723038885e0aa5cc5167f843a6760c98811dc"
+    },
+    {
+      "path": "server-review.mjs",
+      "sha256": "3e2380269b0f81f4d4e22c02b8fb249140b2fb8e38797ce393b210a54d55ae93"
+    },
+    {
+      "path": "server-spring-verification.mjs",
+      "sha256": "1ad11c7ee1521a76bd699fe77f13f57ef5cac7d37cf2b08e5b8da8eb939b0579"
+    },
+    {
+      "path": "server-weight-result.mjs",
+      "sha256": "0239ae399b23b98fbfa883622c20064591a42369988af65d35f2e168911fae49"
+    },
+    {
+      "path": "package.json",
+      "sha256": "9f147c6b9c5defdabafdc956c5b0fbb7b8703f20a3ed7bae742400393e9021f2"
+    },
+    {
+      "path": "local-config.example.json",
+      "sha256": "fb860c3a8ea9ac10f24df6839fe9434bdb5cc2627dbbf580218e79237ea44c4e"
+    },
+    {
+      "path": "README.md",
+      "sha256": "27c3c53f2c9dbf5bf645c439a11e55f422d140398cee33394fb59aed0d55fc32"
+    },
+    {
+      "path": "README.ja.md",
+      "sha256": "d0c3dccb64369bddb0516d594b8a86ff0ab0476370e147ea3d84588078ba58e1"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "01dfa83f3bf5678c5c2f3e0f196cba14b61b83c4ba6e48120f848e3e67f10d18"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "b4426bddef070d11175223a824888cf4c2c4bac5984fddf248265deac33d616e"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "3daf22351715e9321f5389b7b40ea4ed2f8da52013b90e5323bf3b61af02ba53"
+    },
+    {
+      "path": "assets/donor/weighted-body.blend",
+      "sha256": "a4c233b4a2d19b441a8547b4804a17783917bae342751fc9ecf5b1e68bb0a6f3"
+    },
+    {
+      "path": "docs/images/en/01-start.jpg",
+      "sha256": "fe6883a80d70b64b97f783f5e2ba246ed764ccacb073d8c6316e886de2b12267"
+    },
+    {
+      "path": "docs/images/en/02-original.jpg",
+      "sha256": "b5fec50413f0b12ef9acf0c7d0db93c4ca47046491f75bb2103be28f4b1aed4d"
+    },
+    {
+      "path": "docs/images/en/03-request-images.jpg",
+      "sha256": "d25265ce5b584d1defdf31fff5e10a25aed60c3e1a84c4ae33f887859a513fa5"
+    },
+    {
+      "path": "docs/images/en/04-agent-working.jpg",
+      "sha256": "5c6a41e6b1b6fe512264b03e6af76e62fbdb3082eab8499586adf9860808e928"
+    },
+    {
+      "path": "docs/images/en/05-images-front.jpg",
+      "sha256": "e1abe3424fa599664c7eeb7fd6cf6b7960469461382a93d6377fefd82cf358ea"
+    },
+    {
+      "path": "docs/images/en/06-images-left.jpg",
+      "sha256": "1401c0a99e0377bc2c2237490acc6f9b5d278fe23994fbfd2dab80ac9277b7cd"
+    },
+    {
+      "path": "docs/images/en/07-image-detail.jpg",
+      "sha256": "43fe9cf308818aba6ed875c6972b5e5d946414e6b15be3be60cf82053ad3f41b"
+    },
+    {
+      "path": "docs/images/en/09-candidates-head.jpg",
+      "sha256": "05036749a7364a61af6da8999d0631900d1356b2bd17df3f190ca64f3d1fa47d"
+    },
+    {
+      "path": "docs/images/en/11-candidates-decided.jpg",
+      "sha256": "ced91fc5a89e81a34e6df124cd82263abca61921623c7ada68dc4fd15993f704"
+    },
+    {
+      "path": "docs/images/en/13-agent-working-materials.jpg",
+      "sha256": "76c0f8a1a694ae1bb034b425955db8096bedeb8d9f42fe3e15eee0b4487a6d1d"
+    },
+    {
+      "path": "docs/images/en/14-placement-front.jpg",
+      "sha256": "8dad0e874c0eafe8fde4a718b7225f0339f313cbdc977b792bc799d0643c3528"
+    },
+    {
+      "path": "docs/images/en/15-placement-side.jpg",
+      "sha256": "bd6b4ae2b375b971a31dd0afbcf731f57344f0ec1480cfaa58ae3a23788c6da3"
+    },
+    {
+      "path": "docs/images/en/17-review-walk.jpg",
+      "sha256": "2df0537c299c98925298f46c630fa7da27ecfab8e9539e1c61c35da8024bb328"
+    },
+    {
+      "path": "docs/images/en/18-preview.jpg",
+      "sha256": "c1292b45cda9f404da9f26e811aaacabed49e5537b683801f655946ee80c0cab"
+    },
+    {
+      "path": "docs/images/en/19-finish.jpg",
+      "sha256": "78d05a2b1aaaab364a16a572504b6fbc82b0bd982464071bbcf680efa7952eaa"
+    },
+    {
+      "path": "docs/images/en/20-settings.jpg",
+      "sha256": "2cc761dc6878801f318a2eeb05d0dca691823a48f5b090ceb1fb2e0c8f54a100"
+    },
+    {
+      "path": "docs/images/en/21-request-finish.jpg",
+      "sha256": "c2672cc34da2748b7e67cc18555603b7ec11e23045c1cb64e9fb2936bbc6080e"
+    },
+    {
+      "path": "docs/images/en/kit-structure.svg",
+      "sha256": "14df2cea686d19d88203536f4a5c2312c26b3f841e8f9cc9509984c8225ca3d6"
+    },
+    {
+      "path": "docs/images/en/overview-strip.jpg",
+      "sha256": "84fa3c971fb18de6b0ba44dc5baa345628954fe033e6cda4d86e6d9681bf107b"
+    },
+    {
+      "path": "docs/images/en/workflow.svg",
+      "sha256": "cc131d2bac91351e1213a2462ad0384aa28fc45f1f972c5f2b96b0b1bb54c09b"
+    },
+    {
+      "path": "docs/images/ja/01-start.jpg",
+      "sha256": "395eaf35683f48d2a009bfc66686887aa8a73d4b2a82a5a634bb031d38fc29af"
+    },
+    {
+      "path": "docs/images/ja/02-original.jpg",
+      "sha256": "adaa673fac5908987f71ce8d525348f92cd8795ec6f48598cef578fa001de535"
+    },
+    {
+      "path": "docs/images/ja/03-request-images.jpg",
+      "sha256": "46cff88b55f59fac0bad4299398e505a2ad92a9c3c2cc253a15d822ec18f029a"
+    },
+    {
+      "path": "docs/images/ja/04-agent-working.jpg",
+      "sha256": "64e0dbf1f0d0e187cb846b6ad846f7210f8ca6536d8317d564e0c9906466dcf9"
+    },
+    {
+      "path": "docs/images/ja/05-images-front.jpg",
+      "sha256": "7ff1a537980ce92650a06533f51916714037a6caa6466068d655f0cf4950efd4"
+    },
+    {
+      "path": "docs/images/ja/06-images-left.jpg",
+      "sha256": "38acbaef425c6fa98cc29e4f1e51322a8c317ce0618af0c4641d13738a4813da"
+    },
+    {
+      "path": "docs/images/ja/07-image-detail.jpg",
+      "sha256": "ea058b38195b00349acb9f0e96d359f64aee8d23e15a21c0ce11f1a373a74479"
+    },
+    {
+      "path": "docs/images/ja/09-candidates-head.jpg",
+      "sha256": "4e4bd1caa3bb4b7a59c5d8595c58dc582b6793051cd643363ff36501fe7972da"
+    },
+    {
+      "path": "docs/images/ja/11-candidates-decided.jpg",
+      "sha256": "cb3fff54b8268db9e5219d6d1199085ebd73e4e8291736d4176af904c79aa56b"
+    },
+    {
+      "path": "docs/images/ja/13-agent-working-materials.jpg",
+      "sha256": "476bfc055aa046067c4dcd8f3a69bb01563a8a43d90e48f99b6fa5dfa9252d79"
+    },
+    {
+      "path": "docs/images/ja/14-placement-front.jpg",
+      "sha256": "4200e6a5e9ceda8c69f649055830bc9a74a53f6c5ad3f52f7e346c95ee50c928"
+    },
+    {
+      "path": "docs/images/ja/15-placement-side.jpg",
+      "sha256": "5952c46412a30d61eb149cfad3d8450d5f3f1a915e4bc3ce93115332635eb0ba"
+    },
+    {
+      "path": "docs/images/ja/17-review-walk.jpg",
+      "sha256": "365010c519128df174eff053a1efeeeecf69b7496a2f863cea9ea81ed67d675e"
+    },
+    {
+      "path": "docs/images/ja/18-preview.jpg",
+      "sha256": "e9f59498d5c0652e308b54ac77c5d59cd0702ef1c7b787591efb3eb1884df75d"
+    },
+    {
+      "path": "docs/images/ja/19-finish.jpg",
+      "sha256": "9401efde77b27a7411f6d295cf2f2cacb1b5f5bbc041d7a2716b65bdd2ce5e96"
+    },
+    {
+      "path": "docs/images/ja/20-settings.jpg",
+      "sha256": "280a54b8d1c832cb66cd75d990cda403e8fe7ab9643373c9244472a08b490533"
+    },
+    {
+      "path": "docs/images/ja/21-request-finish.jpg",
+      "sha256": "37c05012bf4de34d2421fda2c767dfd7c7e41cc960b23e6b6b3183bacd66a18e"
+    },
+    {
+      "path": "docs/images/ja/kit-structure.svg",
+      "sha256": "f480f8dc34d008c26d494dc9f6f2b80612199619a594a0d56ba83c992ec8a7ad"
+    },
+    {
+      "path": "docs/images/ja/overview-strip.jpg",
+      "sha256": "41658eeb0ac01ceba1692f7ec424be256473a5fe113b280225691c2b0cb46c61"
+    },
+    {
+      "path": "docs/images/ja/workflow.svg",
+      "sha256": "767762a6070af8708e71769764aeb27d147d1a6ac6b54a4b410bb40e6245c1d4"
+    },
+    {
+      "path": "docs/images/readme-hero.png",
+      "sha256": "24ce599d13d4e9520081349935aab3aed0917c564212cc81f76fa23ea0fde765"
+    },
+    {
+      "path": "docs/tutorial.md",
+      "sha256": "bd972c06d635f6ce2c67782d3907dbf63dbb5983d03e163182fde1cde18f3afa"
+    },
+    {
+      "path": "docs/tutorial.ja.md",
+      "sha256": "c85ab3b507d31da64ad7b42e3de95aa0c272e39f3f608295863e4a37449c2ecd"
+    },
+    {
+      "path": "docs/browser-use.md",
+      "sha256": "612881509177f24768a0a46c65052cb03caa3d918531fc5f38d837c3a9627b4a"
+    },
+    {
+      "path": "docs/preview-user.ja.md",
+      "sha256": "a00a0393a72d42b4a5f67fae161f19394cf3518871e95947dd06a8e1ebea127a"
+    },
+    {
+      "path": "docs/project-AGENTS.md",
+      "sha256": "eee61b94c9fdc6b289bb4816d1b36048be2bf7a2ce44d3406d7f72fb433bf31d"
+    },
+    {
+      "path": "docs/license.md",
+      "sha256": "f5cd2d45bee6680f79888d950deba2e65531f11a849d6479257089b3bfa06dd4"
+    },
+    {
+      "path": "docs/license.ja.md",
+      "sha256": "37effd06c89184ab6793a0ccefdf4724d5474292b52842ca184cc3e91c055a58"
+    },
+    {
+      "path": "public/app.mjs",
+      "sha256": "6d67c6a55e601bac2ae64a7406bd00aa656b86e6e627de99d15367350d920e8c"
+    },
+    {
+      "path": "public/archive.mjs",
+      "sha256": "cc617aaf9c85a00bf57118246fc35c715708e167ded3ed7dcc879660810725e9"
+    },
+    {
+      "path": "public/brand/nano-avatar.jpg",
+      "sha256": "f886bde9352a9a3ac743a9c920dc325660459e026852fa3b4affc8f896a03384"
+    },
+    {
+      "path": "public/brand/tripo-dark.png",
+      "sha256": "9fe5a15f3cbe2d4ebd5d375df9458b47c2d35104776aef46aeb660a59a24ac62"
+    },
+    {
+      "path": "public/brand/tripo-light.png",
+      "sha256": "b124a295220f3da65952cfdfc7d15e772d43524ab4db40ba2f60026618961115"
+    },
+    {
+      "path": "public/cameras.mjs",
+      "sha256": "eb20abe1457051f274d481de79fb989dae10e34659a7844de3e27096043248b4"
+    },
+    {
+      "path": "public/candidate-wireframe.mjs",
+      "sha256": "0a8118606058edf80bf9edd5adbdebdc825733a3a348f9c4014aa0de35499bed"
+    },
+    {
+      "path": "public/elyth.css",
+      "sha256": "7daa18ffab16ff26a82663725fd3283feaa991adeece0ccf1e046f74278c2ea1"
+    },
+    {
+      "path": "public/fine-range.mjs",
+      "sha256": "a934249de3facb48e35a3b048b7f96418e911ef8e507e486fabeefcfbfce7826"
+    },
+    {
+      "path": "public/fonts/Orbitron-Bold.ttf",
+      "sha256": "8f0b6b2958d876a4aa0a1be9e6f12847d210bc40fe7ff070db3485d6a4037940"
+    },
+    {
+      "path": "public/fonts/Orbitron-OFL.txt",
+      "sha256": "53300f77e8d7b25fbb971c4980630b1ef1a3a5accc00ff8f54d794d47d0bf670"
+    },
+    {
+      "path": "public/handoff.mjs",
+      "sha256": "35c0286d2eb4cffed7b07a174724d55c5c9147d04ecc85d7c230245036a3d504"
+    },
+    {
+      "path": "public/height-ruler.mjs",
+      "sha256": "a194f38c9fb5a708a08d04e4da707bf5dd28da0d72f3177ce54e03ba7d8f83f6"
+    },
+    {
+      "path": "public/i18n.mjs",
+      "sha256": "ec5cb181c7af4950b52bc05e44bbd9ce0570250eac0ae8dd1e570ffad7f262f1"
+    },
+    {
+      "path": "public/image-info.mjs",
+      "sha256": "68a7738aeeb3d518bf79f064ad2c33f82107213263dcd59114c1aff3b676bfd2"
+    },
+    {
+      "path": "public/image-metadata.mjs",
+      "sha256": "5a91f456875bf9490390e42f04dfa989acf90ab66fd1b027b6fc958dea92929d"
+    },
+    {
+      "path": "public/image-package.mjs",
+      "sha256": "b950880b5f96f333c9ecf8c31c12fb34088d2a19ab4ef1be03cfe43095663277"
+    },
+    {
+      "path": "public/image-ui.mjs",
+      "sha256": "229168a5392e881b6b5d6f8cff75bbf51722c20bf89cda651f8d6aaeea2c04b9"
+    },
+    {
+      "path": "public/images.mjs",
+      "sha256": "dffa3f7fcf73c84c5339997962e9cb3dbed1471871500a5fa46eeea4eb96b856"
+    },
+    {
+      "path": "public/index.html",
+      "sha256": "445a65c7b6c2394a704f288a967bf9ce86b0a5e0eea6e07efe490aa69fa82c6c"
+    },
+    {
+      "path": "public/journey.css",
+      "sha256": "08598169287e7c1873087c6a0e4c1acc5bbfec10a8d319122ac93c3a2c0634a4"
+    },
+    {
+      "path": "public/journey.mjs",
+      "sha256": "79d5a8e6e3c67fe132c41f8e510a90ea39bc5e67ba5f9ecb09669d101fca70e9"
+    },
+    {
+      "path": "public/material-preview.mjs",
+      "sha256": "14540fcea8d3b93de815f803795fbb669fbc857761f281924d023136653d9e2c"
+    },
+    {
+      "path": "public/mtoon-materials.mjs",
+      "sha256": "53cb00d63472b3253cc00ff2d65a863fda1b39b4c0ead41b5fe7f7ffb4e2846f"
+    },
+    {
+      "path": "public/mtoon-profile.json",
+      "sha256": "168d12c8c811994870fd4f1061933ada4810120c2ed58d0b2fcc52d91d3deec0"
+    },
+    {
+      "path": "public/mtoon-vrm.mjs",
+      "sha256": "fa57c822a9c3996c8922f0e1a16c3b0135d6d538a78257a6dd6fa386a15312b0"
+    },
+    {
+      "path": "public/models.mjs",
+      "sha256": "492ba92c0e56f570b273f22f5bd3a090ff48c2835b148978854ef9ed68769a3f"
+    },
+    {
+      "path": "public/mvp-ui.mjs",
+      "sha256": "d94ae98e9f949d1e93f5a45b6641e3a4edff9e175638821ab18a06885d9e357d"
+    },
+    {
+      "path": "public/mvp.css",
+      "sha256": "75f4573608875847d624743dc2f845ecee7087a57226efd2300aa9a935b00617"
+    },
+    {
+      "path": "public/preferences.js",
+      "sha256": "0f84c46b36f0895c77a2120a13e01ecfd408e55971d85d1e8eb82a88c4d14d36"
+    },
+    {
+      "path": "public/preview-avatar.mjs",
+      "sha256": "18e70d49aeb456e77dea8eb52a821adf5e74ee3722d953c4a0f0fe14b2c2ba72"
+    },
+    {
+      "path": "public/spring-physics.mjs",
+      "sha256": "291c0d8cbfdc1dc08f3941d910dbd6334a7ad4272ad570dd8dae885a407ed0e8"
+    },
+    {
+      "path": "public/preview-gltf.mjs",
+      "sha256": "1647509e47222d9294636ef0c83e62001d659438f1a4859cc4fa8c45ec945404"
+    },
+    {
+      "path": "public/preview-translations.mjs",
+      "sha256": "5c8f481ecb0573e49cfb8ec13de42f6fda3daa700a600bfa407ae7f3885f497b"
+    },
+    {
+      "path": "public/preview-ui.mjs",
+      "sha256": "88a4f38929450fe752d83b96fecf29153cdaba5d634d6690dce0c15201e7174b"
+    },
+    {
+      "path": "public/preview.css",
+      "sha256": "e7c877efbe0bd7a97c43368289e177ec20a5985827e1c2c0cb11a11dd76db1c1"
+    },
+    {
+      "path": "public/production-details.mjs",
+      "sha256": "ee6ff9bd44c9977e39f0c490d79801605a938e8af268a6ad3bf836cb39409cd2"
+    },
+    {
+      "path": "public/production-files.mjs",
+      "sha256": "e789fa4c68c661ab8fb733c0ff3d0ba1bcf5780ef817d32057aad2fd19ac7fda"
+    },
+    {
+      "path": "public/production-job.mjs",
+      "sha256": "18bbd01e82a82d48f5d41fc5c43cb6da1647ee2ff3210f65419d14f16cc5902d"
+    },
+    {
+      "path": "public/production-ui.mjs",
+      "sha256": "06c767844cff375a7679f7f1580e068ff57a6759a4ea91ee58b7f4daf80378d1"
+    },
+    {
+      "path": "public/production.mjs",
+      "sha256": "321f01e64a17a6060951305611d052f1d7c3b31dfc8f74a962c41fdd8b0fde20"
+    },
+    {
+      "path": "public/project.mjs",
+      "sha256": "df38b92e9f625c5f803c05f9d8929946d41a3276091b8baa2188ccb90d6a69d5"
+    },
+    {
+      "path": "public/rig-guide-data.mjs",
+      "sha256": "fa04a78aacd02528297a0a6102db63a563a8765943ab28838aff315e0eb7b18f"
+    },
+    {
+      "path": "public/rig-guide.mjs",
+      "sha256": "faf87f4106d2a5543dd88e769c14493bd0faa19a561456073cc9dda8c19dbe98"
+    },
+    {
+      "path": "public/rig-review.mjs",
+      "sha256": "4637507506d363c69064d329968f79c306f8ad1474128a4b9853866c50669f7a"
+    },
+    {
+      "path": "public/review-vrm.mjs",
+      "sha256": "12e208c4bddaa11df6a0bb76c6b475592042abbcf566eb6d6534241ac6789860"
+    },
+    {
+      "path": "public/vrm-review.mjs",
+      "sha256": "8eb575e821acf78440c86534b3a539f3f1c1554525c4f78a7d149f2bdb0712b5"
+    },
+    {
+      "path": "public/motion-review-ui.mjs",
+      "sha256": "85ce80b11dede5c0f33e643a859930af1e0d360628250052c3e026609ed54e86"
+    },
+    {
+      "path": "public/vrm-export-ui.mjs",
+      "sha256": "886d91211898652f53347506c3b0bf8613259fe031be9a53e56aea26dc2327c7"
+    },
+    {
+      "path": "public/motion-review.css",
+      "sha256": "a1bc9e4c25e4216c78dd3b72daaa77bd8226e4dac0e35832dbb2edce2618243b"
+    },
+    {
+      "path": "public/roundtrip.mjs",
+      "sha256": "9d908afa433dc3da4c9e0c11b8baa91f9b4a9cb2d75c7029988047fb53faab4f"
+    },
+    {
+      "path": "public/schema.mjs",
+      "sha256": "7a969a3ddd47df25e69ed3608552cc48c0376066fb10d33d138858a513023a06"
+    },
+    {
+      "path": "public/three-view-data.mjs",
+      "sha256": "9878d78842cadb89f8bb8af36739a5f78fd97ab3759a8d38fe0efa1a662c4fdd"
+    },
+    {
+      "path": "public/three-view-import.mjs",
+      "sha256": "b8ce5964ea5c019f0e0f32f3899e33926b02c409c9224a0aa2c973cb5a6df1a1"
+    },
+    {
+      "path": "public/three-view-renderer.mjs",
+      "sha256": "e9507260166722693ba39bdd4c407d4468a5be4f64bccb9f96b7329f35d0eb52"
+    },
+    {
+      "path": "public/three-view-ui.mjs",
+      "sha256": "381f754f899ae7d45a8ef549cbc85de920aeff1dd459ebbd115b3337aa53c078"
+    },
+    {
+      "path": "public/three-view.css",
+      "sha256": "7d10afa8ec5e009270125169369652fb034685a1937f6cf069c6a11c52a9064f"
+    },
+    {
+      "path": "public/session-ui.mjs",
+      "sha256": "a68011fa16b71fe78854be33cfcac138649e6b620615f190c9e92037d4cea466"
+    },
+    {
+      "path": "public/shell.js",
+      "sha256": "7119f958aed82f3b437a526bc67b55cd4a36e9a5aa4aa6c28555315982fb548c"
+    },
+    {
+      "path": "public/style.css",
+      "sha256": "83f2861ac3be83e83a2928f876ec455e20183ba0051268cc9822a31de60144fe"
+    },
+    {
+      "path": "public/translations.mjs",
+      "sha256": "c5d795984c6aed132c9e30d6f86894a8b6c15ee8df1fc40a229e5691df10e7c7"
+    },
+    {
+      "path": "public/vendor/BufferGeometryUtils.js",
+      "sha256": "5beb9dc7e9248a32f7b5e8cc0dd5fd4054d227d8e19a3a98b4715f6d2784c4ef"
+    },
+    {
+      "path": "public/vendor/FBXLoader.js",
+      "sha256": "0efc8a185f483aafaa81a03ab21e6a5d3caffadeb5eb0acc8299a19d02d14aca"
+    },
+    {
+      "path": "public/vendor/FFLATE-LICENSE.txt",
+      "sha256": "d3268a8f7476666635fe067d0094ee68f9fa1412eb77263520619c980e1e535c"
+    },
+    {
+      "path": "public/vendor/GLTFLoader.js",
+      "sha256": "956746f80fe2af1650a6c0b156ac619f2c66ab9fc697e1d81d3bce1e4654a5d0"
+    },
+    {
+      "path": "public/vendor/NURBSCurve.js",
+      "sha256": "45d23abc745604bffcccf4c6fb9871e844e105d79204035484722db3b7637049"
+    },
+    {
+      "path": "public/vendor/NURBSUtils.js",
+      "sha256": "f1ea8b9ecb8c4d48a19ce3bdba8c289b0a2642e12fce84e77ee2e1fdb345d479"
+    },
+    {
+      "path": "public/vendor/OrbitControls.js",
+      "sha256": "00021f896fee7accad035ada2b72abd9e12f21de349896576e8fd75d9542989e"
+    },
+    {
+      "path": "public/vendor/SkeletonUtils.js",
+      "sha256": "040632db95ec6d2b31e7e50aabb1260af1b85a0901a716062a5ea90972e060fc"
+    },
+    {
+      "path": "public/vendor/THREE-LICENSE.txt",
+      "sha256": "f57eb9202058667d12aebd854fe8a86d6feaeab51078180df5615bfdbd5cff05"
+    },
+    {
+      "path": "public/vendor/fflate.module.js",
+      "sha256": "4bea07664a7dbdd4e4f677a0fd8798ca42ec7cf207553ece5852d7e56c5042e7"
+    },
+    {
+      "path": "public/vendor/three-vrm-LICENSE.txt",
+      "sha256": "b100ea9e0fea5866b52583374c410638b836167265619f30996b610ad82c2960"
+    },
+    {
+      "path": "public/vendor/three-vrm-animation-LICENSE.txt",
+      "sha256": "b100ea9e0fea5866b52583374c410638b836167265619f30996b610ad82c2960"
+    },
+    {
+      "path": "public/vendor/three-vrm-animation.module.js",
+      "sha256": "1075b04bb2a2682ca1f67035b06a7408e2afc62d90b3612768f90e13f2636227"
+    },
+    {
+      "path": "public/vendor/three-vrm.module.js",
+      "sha256": "1a7170a8adbc2cb54a8912d017afc33282f16c62c680ab333c2263e845537234"
+    },
+    {
+      "path": "public/vendor/three.module.js",
+      "sha256": "da7f8aecb0b1e4a55e820cce5dc5a5a8eb13dc379758f215e8fb07937be7a6a3"
+    },
+    {
+      "path": "public/review-walk.mjs",
+      "sha256": "bcf76c2a6de9838779903173515c4786cf85410235c710d50a747aad6f795011"
+    },
+    {
+      "path": "public/review-walk-data.mjs",
+      "sha256": "a884bfb13fab5488a571a16764298051b87e6bade3bc5b7dc35627927c453667"
+    },
+    {
+      "path": "public/elyth_base_walk_v1.vrma",
+      "sha256": "50b27c7363ff844ccb0b71373794326583a601128e90f14de0c3df7bfefe9161"
+    },
+    {
+      "path": "public/weight-job.mjs",
+      "sha256": "08b051690f187c2e0dc469a3bf5d77c2a1abf0b403efc82d00d40e9d223f47b0"
+    },
+    {
+      "path": "public/weight-plan.mjs",
+      "sha256": "ffb3d4f94b5a52b70e96e691ab3ad9569737d1298efa0cc5a87651b773daf66b"
+    },
+    {
+      "path": "public/workflow.mjs",
+      "sha256": "5fc6c70c3e1e19db00d72a06ebf20064f7b29e8820c10c734825faec92c738cd"
+    },
+    {
+      "path": "scripts/agent-session.mjs",
+      "sha256": "87daabc4afa932781be5f62a1e8f1a88c1da4c36bae5e1dad5e0c209bf34e038"
+    },
+    {
+      "path": "scripts/export-rig.py",
+      "sha256": "ab385e417f5a4ebcf2f1d879cf1e2e17f2fa45dbe24429ba2d9c96defd010b4e"
+    },
+    {
+      "path": "scripts/mtoon-export.py",
+      "sha256": "c2661ca13c333852911278ef5b4316894e31872114011fda9098421b143ef238"
+    },
+    {
+      "path": "scripts/export-review.py",
+      "sha256": "1435df35fb487cb9bdce7cc52f22ee5e128330eade4902533428ffd03d4e1fc7"
+    },
+    {
+      "path": "scripts/spring-setup.py",
+      "sha256": "0edbe2277a3222ea5f03ba4199e4d87fcb6217bae673b27d62df187cfad97824"
+    },
+    {
+      "path": "scripts/verify-springs.mjs",
+      "sha256": "1558eaa46ce410d2184472dfc6089649b0a905232e966f3291e2a86e30d85d72"
+    },
+    {
+      "path": "scripts/export-segmentation.py",
+      "sha256": "9d0d0c8dc6822f702fd3e346733f595e2aae8652e5b165b0e5491962164c4655"
+    },
+    {
+      "path": "scripts/extract-donor.py",
+      "sha256": "38d97da0e1c47f066cfbba35189fbf3070f0968aa3737ea5cd60978926f89d55"
+    },
+    {
+      "path": "scripts/import-bones.mjs",
+      "sha256": "5ec01cbef54f48863787035b7aaa3b0f355174ca531e48d7ef873586704ad6e7"
+    },
+    {
+      "path": "scripts/package-images.mjs",
+      "sha256": "2c018f4f1dcc770ab1db580a2dfaf9bc82c4e0a7f5944f641ea7136ae9bfccba"
+    },
+    {
+      "path": "scripts/update-three-views.mjs",
+      "sha256": "5b569eafc0a8729b28449b72c5308d627eb8bb127467a5f6bc9606e358c06721"
+    },
+    {
+      "path": "scripts/production.py",
+      "sha256": "a063902bef72ec079e3f52d356f7fe975c9d84385664d8588b8be339c34e7b7b"
+    },
+    {
+      "path": "scripts/project-write.mjs",
+      "sha256": "edd55469c24261b121c3e3d635aa149e931ca23cb46918a561768ff0a46ce06a"
+    },
+    {
+      "path": "scripts/run-local-job.mjs",
+      "sha256": "ee3fa4b9f6bbcb095cdbef9fbdb55787c0c8a75208bc54dbecb0d9906fff89a1"
+    },
+    {
+      "path": "scripts/separate-springs.py",
+      "sha256": "6b3f0fc8fec977cb7900889cb135501a9a9e22de45cdbf88cdedf0bffed5724d"
+    },
+    {
+      "path": "scripts/set-weight-plan.mjs",
+      "sha256": "1b6a9b562e2af8400237c063668eb68fe4edd95eca1cbc8ad3e6f906200750b6"
+    },
+    {
+      "path": "scripts/transfer-weights.py",
+      "sha256": "13fb3b2be29f9b10320983d9519fa280be16903d779744ff740e18d2ec835eba"
+    },
+    {
+      "path": "scripts/tripo-project.mjs",
+      "sha256": "c730b948e4168efbd57ba9ad182a07748082e5dbdddbccc6a65e8af62fd15b6a"
+    },
+    {
+      "path": "scripts/update-images.mjs",
+      "sha256": "b1ca995f0ca15cd3e0c8c6f721b5fd5e7809fda29df803d0351a4398b165f275"
+    },
+    {
+      "path": "scripts/update-model.mjs",
+      "sha256": "151da79364012faee67e1a1d86f6bdf17c00a8933858c6dbb0d563175c5ea952"
+    },
+    {
+      "path": "scripts/update-spring-parts.mjs",
+      "sha256": "94b96f30146b216235ecc7f75167f6e1c7269a3721940666f3626c5fd40cd575"
+    },
+    {
+      "path": "skills/avatar-spring-setup/SKILL.md",
+      "sha256": "467474ef418bfa89e50182aa74bc4e7f18c66eca25e475f4f10d84ce61f7bef7"
+    },
+    {
+      "path": "skills/avatar-weight-transfer/SKILL.md",
+      "sha256": "dcf22336a7fd1a71f8c42235f8b9a1ac6f79af793330282d96700a937348bc0f"
+    },
+    {
+      "path": "skills/avatar-weight-transfer/references/bone-guide.md",
+      "sha256": "bb9fd8948fd49fa6d904df9ab57aee517ab03e4c1e74462c400cb796792eef4d"
+    },
+    {
+      "path": "skills/avatar-weight-transfer/references/manual-transfer.md",
+      "sha256": "04f855588137a4410158ce83db96cb86c316adea1acfdae7b911abb11d2e9073"
+    },
+    {
+      "path": "skills/avatar-weight-transfer/references/spring-review.md",
+      "sha256": "21b3b05036d20b427a1542261c3807ebc6829bea9f6cc5280ff1f403cff187a6"
+    },
+    {
+      "path": "skills/avatar-weight-transfer/scripts/from_guide.py",
+      "sha256": "610f5157c935dccb02fc2cdcbd52fa973d6fb844bb851ab10cd075eb6d96bdc0"
+    },
+    {
+      "path": "skills/avatar-weight-transfer/scripts/transfer.py",
+      "sha256": "22b723370608ec15fcbf5437a7e6eeb5f43fc32c8640154184ca3f9152de996d"
+    },
+    {
+      "path": "skills/character-material-brushup/SKILL.md",
+      "sha256": "6187b46dd884bdec995816d32e3ad0cf323c2d7b18ca800c8e8d96370836bd70"
+    },
+    {
+      "path": "skills/character-material-brushup/agents/openai.yaml",
+      "sha256": "c359f2d80194511284e2182de112a8984cd00ae52321acecab649bba6ce8f5f8"
+    },
+    {
+      "path": "skills/character-material-brushup/references/painting.md",
+      "sha256": "d929224832f338199115a01b60307d01db872b6f11b9e8fe4e6603f79d007c49"
+    },
+    {
+      "path": "skills/character-material-brushup/references/prompts.md",
+      "sha256": "8dc3fb0ed78af8ab99f4ba6c6838db5934fea5b6372820de43a9f11866f73aad"
+    },
+    {
+      "path": "skills/character-material-brushup/references/reference-research.md",
+      "sha256": "de2ee7d54dc0ef5b2ab5377a4aeeaafc6255986af5d89e0e5377a35fe03dc66c"
+    },
+    {
+      "path": "skills/character-three-views/SKILL.md",
+      "sha256": "5ea5aa8d1ee3cb4da401456bdbeaeb0b49f598fba46ce43fbf868e61cb6c57b6"
+    },
+    {
+      "path": "skills/character-three-views/agents/openai.yaml",
+      "sha256": "52d1f2ce9f86481836cb2e40394b0f15e2244a2a29d4b192377a03ce88185531"
+    },
+    {
+      "path": "skills/character-three-views/references/prompts.md",
+      "sha256": "99a17ca2cecabd4061af54cb157c08eac000cba1d035359fcf5c435cd5e5c763"
+    },
+    {
+      "path": "skills/character-three-views/references/delivery.md",
+      "sha256": "83f4850945a41e835b0264069f38298be5a554591d89ca193151abd937995536"
+    },
+    {
+      "path": "skills/character-parts-images/SKILL.md",
+      "sha256": "6601a8f14f0ae740b2f7a7d2e42121f4847a7717ea2acf7d64f7ced8de52a1f1"
+    },
+    {
+      "path": "skills/character-parts-images/agents/openai.yaml",
+      "sha256": "8f0840df9f429856bb76b1228c3e4097dfadda659011d728042051a536a19302"
+    },
+    {
+      "path": "skills/character-parts-images/references/part-contract.md",
+      "sha256": "f6082d6743d97696958cdaf0e27acfbbaf51e1f78ccc3455651a51c51cd000b0"
+    },
+    {
+      "path": "skills/character-parts-images/references/prompts.md",
+      "sha256": "4f4b12894df44d585bef921024df3c7821205d657b59f1121f62bb1e9a74aa47"
+    },
+    {
+      "path": "skills/character-parts-images/scripts/check_assets.py",
+      "sha256": "4559304a64cdb4dcbe4ce7f6510e2e9cf86bf821efb8c564039bd533c0e96b2e"
+    },
+    {
+      "path": "skills/charakit-project/SKILL.md",
+      "sha256": "781a9548082610b0ad8f2e304926f69a78419038bba58136a3a0f1a4fe31cd4b"
+    },
+    {
+      "path": "skills/charakit-project/references/common.md",
+      "sha256": "b3e6621ad02ac038785f584134c836cbdaeb55eb4c32433113943d18b06a3ca7"
+    },
+    {
+      "path": "skills/charakit-project/references/image-delivery.md",
+      "sha256": "ed096065bb07e4937b64bf3c50d6cb528bb64fbabb1f9cae74cf938baf8e1db3"
+    },
+    {
+      "path": "skills/charakit-project/references/production-format.md",
+      "sha256": "191c165282cf81e62591646758c1b0d24029c6ecffa5a1f71f08e3264888049d"
+    },
+    {
+      "path": "skills/charakit-project/references/project-format.md",
+      "sha256": "4c58b3bddcfdcd4dec5bb53367a5b7fb5d8b82c77da33ea79789f0537b0bd69e"
+    },
+    {
+      "path": "skills/charakit-project/scripts/import_guides.py",
+      "sha256": "0b1b24df590752ebe496583780351b6c84896d2483fdc318ae3979b09513d416"
+    },
+    {
+      "path": "skills/charakit-project/scripts/import_models.py",
+      "sha256": "c76043015411850cb58b01683bd9f7b70755994346ff10c41a38b674c7bd8258"
+    },
+    {
+      "path": "skills/charakit-project/scripts/production_data.py",
+      "sha256": "871533fb79d1fcbee8940d5bf2758e1f4615d24d86035155e965555605a0d4d8"
+    },
+    {
+      "path": "skills/charakit-project/scripts/unpack.py",
+      "sha256": "52c22a3b2db5e5539ff919a5ae89d43648e553e4029008bc067c1e0363175bbd"
+    },
+    {
+      "path": "skills/tripo-agent-workflow/SKILL.md",
+      "sha256": "9afbdd55f5d5b32009fcce69e2a729631581da7708bf7e04b5cbd47fbc4111a3"
+    },
+    {
+      "path": "skills/tripo-agent-workflow/agents/openai.yaml",
+      "sha256": "eeaaa2ca158b01b3b82069d08bd153bbe7d1882cdfbfdb1750f8bbcd75c143c6"
+    },
+    {
+      "path": "skills/tripo-agent-workflow/references/commands.md",
+      "sha256": "00f8411ec2b66ef112ac82f7e22f0d1adb2e2cddfaf0a0eefcb8c096e4032d80"
+    },
+    {
+      "path": "skills/tripo-agent-workflow/references/retexture-images.md",
+      "sha256": "c5d7674ddc118e6390e4d7dfa9e5362f1be7ec3d49f3f36b60ab30f33b54f4a8"
+    },
+    {
+      "path": "skills/tripo-agent-workflow/references/tripo-ui.md",
+      "sha256": "fe48c6c1f1c7426b25ddae3383c3f85938f9b3870be3eb4a6be80f4aff833c1d"
+    },
+    {
+      "path": "skills/tripo-character-setup/SKILL.md",
+      "sha256": "7eaa5faff0cf0bbfa2efbe9e0e517b711a6257e959929763c1c82c90dce1c757"
+    },
+    {
+      "path": "skills/tripo-character-setup/references/humanoid-setup-guide.md",
+      "sha256": "4953313c89cd6cc23176218770d9bec0faa9f88287477bae1c1f55e002ae8a42"
+    },
+    {
+      "path": "skills/tripo-character-setup/scripts/humanoid_setup.py",
+      "sha256": "ff7d4ec14ee52b484118d23c2cd7948f8128d0b9f716cf92994c8108a63cc543"
+    },
+    {
+      "path": "skills/tripo-studio-download/SKILL.md",
+      "sha256": "1670d9eb5dcf914eaa5acc8e51c60a01ddcb4206ec5c1a09f375a7e8b57c61b5"
+    },
+    {
+      "path": "skills/tripo-studio-download/agents/openai.yaml",
+      "sha256": "d028495243b8b51e84e188d7d0a61dc50be86fcbf8b7188ce6dc7797a9c411d0"
+    },
+    {
+      "path": "skills/tripo-studio-download/scripts/receive.mjs",
+      "sha256": "0ecc8d126d4d09a6612237f763af6903266c4b7e14cfad13cf389c9c483c7707"
+    },
+    {
+      "path": "README.ko.md",
+      "sha256": "9d15d5858f42ef1df7a31bc3ab95edf7b1e03b8508dd85c1af305c362e8930e2"
+    },
+    {
+      "path": "docs/tutorial.ko.md",
+      "sha256": "dedb55447cd76e4f419c6a54d05a35e44a4133042df3c057bb115819333dae26"
+    },
+    {
+      "path": "docs/preview-user.ko.md",
+      "sha256": "b18f94f412f10e66362c9551ae1ec3935dc5612f6a46afabd05fe070b05cf1b1"
+    },
+    {
+      "path": "docs/license.ko.md",
+      "sha256": "963d8a7aacfae84d94d91598f24ad9d1b10296da2ec72ed139d84907e8b701de"
+    },
+    {
+      "path": "docs/browser-use.ko.md",
+      "sha256": "c3548c77221c86a25779a48d1cd38b8f03fcedaae1c79022848221761a660b4b"
+    },
+    {
+      "path": "public/locales.mjs",
+      "sha256": "1cb50ba1f03e1e23a7b31c230a9ca2babb676917c5e95949c87aa77e15a7d177"
+    },
+    {
+      "path": "public/ui-translations.mjs",
+      "sha256": "9d412b1323c3933cd7bc24d61ca514bffbf3984adf62b010776f12d22a406c2e"
+    },
+    {
+      "path": "public/translations-ko.mjs",
+      "sha256": "b0abb829816ff9a082a29a7af5b0880b95154dcbb26667a2f0c059de1aa81ddd"
+    },
+    {
+      "path": "public/session-prompts.mjs",
+      "sha256": "6c0b9833f5b9d25eeda6891c854c3c9e3cb6a596b044235f1451436940b46628"
+    },
+    {
+      "path": "public/task-translations-ko.mjs",
+      "sha256": "00d9f670c0fe3f3de6ac1ec360ebf4e06ddb5c9d87f5589e7830aabc08fc6bbb"
+    },
+    {
+      "path": "public/handoff-ko.mjs",
+      "sha256": "c86358b4fead1d19ddfa0ae0bed125afac36f0f84fe974fe0637dd10da46ad05"
+    },
+    {
+      "path": "docs/images/ko/01-start.jpg",
+      "sha256": "717be918b0e0a259b5b4e3799157bc5294f33f52e0c71fe851ec32acb517af10"
+    },
+    {
+      "path": "docs/images/ko/02-original.jpg",
+      "sha256": "66c1cda469c8edaadd4610ea4eb56b03bcaeee6e6a16b50b6f1319ca18098f5c"
+    },
+    {
+      "path": "docs/images/ko/03-request-images.jpg",
+      "sha256": "59dc954bd5ea4661ff2b78da9e9f07225b28d84a914acb67b59055c34ece1e50"
+    },
+    {
+      "path": "docs/images/ko/04-agent-working.jpg",
+      "sha256": "b0653b9817b0ed2a33a936e838bfed06bdb5d0b622177351693e2318797f4457"
+    },
+    {
+      "path": "docs/images/ko/05-images-front.jpg",
+      "sha256": "93b89cd835ed6b9c9960553ef4de5f5dc57cd8251bfb12396c51123bd78e739f"
+    },
+    {
+      "path": "docs/images/ko/06-images-left.jpg",
+      "sha256": "7549e73f32e132adb3fffbaaf5da55833ed7f00726f49d6dab10fb60d564bfeb"
+    },
+    {
+      "path": "docs/images/ko/07-image-detail.jpg",
+      "sha256": "c6ffb51403686cdae339481ad03317a045ddb963e60a2418fce997fbc8a2ea6d"
+    },
+    {
+      "path": "docs/images/ko/09-candidates-head.jpg",
+      "sha256": "06d73913ab06c134315b6a21393d679ef401ec520af24d6b246e115aa2bb1b46"
+    },
+    {
+      "path": "docs/images/ko/11-candidates-decided.jpg",
+      "sha256": "72a4c9e68653818b93b025191318478f519620ae80ecee22a3be30c4e882332e"
+    },
+    {
+      "path": "docs/images/ko/13-agent-working-materials.jpg",
+      "sha256": "3519caa9c0394d22ace4b4c0a6a1f743fd75069cb99cbd61f3d0f840beac73bc"
+    },
+    {
+      "path": "docs/images/ko/14-placement-front.jpg",
+      "sha256": "56a13b69a0e00f49c90b6ab18dab4cdaf1b2eba9e7fa76ad52a028e0ec35d909"
+    },
+    {
+      "path": "docs/images/ko/15-placement-side.jpg",
+      "sha256": "19b1bea289d451d30052a80b771eb658f095e5b413456b7e05b08def7d76e725"
+    },
+    {
+      "path": "docs/images/ko/17-review-walk.jpg",
+      "sha256": "d7d79b06722f2cb7d8b568004cf9a5cb6ba8e7d50c7006050f80c43b79c786cf"
+    },
+    {
+      "path": "docs/images/ko/20-settings.jpg",
+      "sha256": "c70a7559a134f8af8f52e58995e6b80bf3d8f587570a7c938a59fb978216f0ef"
+    },
+    {
+      "path": "docs/images/ko/overview-strip.jpg",
+      "sha256": "999b3811689feeb9540aab25c44bbf6376de2a84c1f5b66644581932eca54668"
+    },
+    {
+      "path": "docs/images/ko/workflow.svg",
+      "sha256": "115c898d5383921c122238f53b109c3c8431ec54359df74108460a84e748382d"
+    },
+    {
+      "path": "docs/images/ko/kit-structure.svg",
+      "sha256": "d6d35e696c418c06b9a8d2d4e6ebfc569fe09fe802867c12ed2c3e3f3e2354d9"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "fd18448b882b4d4ea52d5be33be156a2b206137d2a71b88c6a575c1dd22d68d0"
+    },
+    {
+      "path": "AGENTS.ja.md",
+      "sha256": "d0f44ded62b54dd3cc2ade1e935fefa12a1173caf69102d1796401256a0374dc"
+    },
+    {
+      "path": "docs/expression-authoring.md",
+      "sha256": "0f7a64790d27d78254ff2204a51703298ea3dab69b59c6a04b7b6a7cc3475cd5"
+    },
+    {
+      "path": "docs/preview-user.md",
+      "sha256": "6d7ec1d148efd5756395e2e5c2a17bba8d66090100b9fe412542fb47c742904f"
+    },
+    {
+      "path": "docs/project-AGENTS.ja.md",
+      "sha256": "6ab0b122649a56d56fbcd202ebd0b5974ff89eeeec35ad63d51e40d131c62966"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/SKILL.ja.md",
+      "sha256": "29687b0cb5656211219d2e4449ce5af45116172b09b593cfd391481ba7f4f93e"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/agents/openai.ja.yaml",
+      "sha256": "71ee430c7a6022d6a225dc507b94954127a1b16eaaec9fca9089917220f5d275"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/references/anatomy.ja.md",
+      "sha256": "44c0a996ff25792f09d1f4f783f9938159cdd2cdd464780de90b2c23a3dfb3e8"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/references/commands.ja.md",
+      "sha256": "2fa38619a058d26d235a24793b300091f97ef6fde5f113cf6f85058a14b80d13"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/references/diagnostics.ja.md",
+      "sha256": "5a73c51b354b7876b8ac8b520c899d4ab41de134c03ed488c3b39004bc93fb9e"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/references/transfer.ja.md",
+      "sha256": "53ff5280c8f5bb51619e766c3017177a3e8e5035517771f4b2ae55e56dae1594"
+    },
+    {
+      "path": "skills/avatar-expression-authoring/references/visual-quality.ja.md",
+      "sha256": "90029d2711d77c3ce8d6a2746273d674ebb0c9a5eb108137f7fefd9657471afc"
+    },
+    {
+      "path": "skills/avatar-spring-setup/SKILL.ja.md",
+      "sha256": "9f16b95cc59752d080639703e677f70be41bdbbd9ea65a4d0c5890e62b50ec7a"
+    },
+    {
+      "path": "skills/avatar-weight-transfer/SKILL.ja.md",
+      "sha256": "541dacb12e39e2d7685414bf19b5b04a63b68498a800e51aea05ec95f4bd02b9"
+    },
+    {
+      "path": "skills/avatar-weight-transfer/references/bone-guide.ja.md",
+      "sha256": "41f9571879d546b67ce37ebe4908209e9eb180899a3e21ef8a72c4c958d9390f"
+    },
+    {
+      "path": "skills/avatar-weight-transfer/references/manual-transfer.ja.md",
+      "sha256": "0ed02f83af25cd0e663eea4ef29de23c61681b85fb8a71c686c5e21a09a36489"
+    },
+    {
+      "path": "skills/avatar-weight-transfer/references/spring-review.ja.md",
+      "sha256": "a6f9fe7cbe4b910de3b90e05b9d07041fc07daea1fc5d3980e1f0841517ed2b9"
+    },
+    {
+      "path": "skills/character-material-brushup/SKILL.ja.md",
+      "sha256": "91efc65191dbeef1fc7b2a706808bb8d7445cc5cd3311cc900e358db2128b8ae"
+    },
+    {
+      "path": "skills/character-material-brushup/agents/openai.ja.yaml",
+      "sha256": "99d08a2ddeb4fa4c935932cff4fdf0f1d3a854fe0a582cb923eba48656a4cc5c"
+    },
+    {
+      "path": "skills/character-material-brushup/references/painting.ja.md",
+      "sha256": "ed2aaa3a6ecddcc0a50515f6afe652b58abd18360bce1ef74582650411e198bc"
+    },
+    {
+      "path": "skills/character-material-brushup/references/prompts.ja.md",
+      "sha256": "858a734698e153f29ab6e7f377fc9ccaf932d0670c27fb4fa8b3a4ab5f5ac056"
+    },
+    {
+      "path": "skills/character-material-brushup/references/reference-research.ja.md",
+      "sha256": "d276d1b30bbfe4008130ee3059acb0d1ce7d2a619593b3b6deef5cbc3969fe87"
+    },
+    {
+      "path": "skills/character-parts-images/SKILL.ja.md",
+      "sha256": "6b70ccbbf43bd2771792ed73e861ce4f775f9232327ae783d91c3d44ed45a34c"
+    },
+    {
+      "path": "skills/character-parts-images/agents/openai.ja.yaml",
+      "sha256": "cd5a51bfc762f1654b6d6ead96dee1cc369ea92fd877abcdff751b361817a1dc"
+    },
+    {
+      "path": "skills/character-parts-images/references/part-contract.ja.md",
+      "sha256": "60da645d7cb91e09942727616caf795dff0de20b27698de879b202d1a2b0c75a"
+    },
+    {
+      "path": "skills/character-parts-images/references/prompts.ja.md",
+      "sha256": "617d77871e253b82ad9addc1bb059ca4f7115205857f67edd667d895b994eee6"
+    },
+    {
+      "path": "skills/character-three-views/SKILL.ja.md",
+      "sha256": "a8d701c610db2434c1adf52bf01b99c741371584e6adc9f6b12b0dac57a711a2"
+    },
+    {
+      "path": "skills/character-three-views/agents/openai.ja.yaml",
+      "sha256": "5dcd252a98a4c741f140ed010213bdf0d2480357d98fa2f531791b464e10d3a0"
+    },
+    {
+      "path": "skills/character-three-views/references/delivery.ja.md",
+      "sha256": "3041d8940530e21e800e40c194765b676eeaa2992c6e828025e4370576668846"
+    },
+    {
+      "path": "skills/character-three-views/references/prompts.ja.md",
+      "sha256": "55282557a4eb170b8890367df577f5cae6e1ce6793ac2ca13090d345e72230d0"
+    },
+    {
+      "path": "skills/charakit-project/SKILL.ja.md",
+      "sha256": "3e27ef0df65a35c147ec71035258b5b5d710f1fb215e4c265635ad31dbf4163c"
+    },
+    {
+      "path": "skills/charakit-project/references/common.ja.md",
+      "sha256": "01248624b2bc8ddabfc92023359bd07a66f69ed5c719c67a72459440fe06cd00"
+    },
+    {
+      "path": "skills/charakit-project/references/image-delivery.ja.md",
+      "sha256": "2522efa71987bc56305f606c0d3bdbbbc85a901378b4bf403a788ab823fb3a1e"
+    },
+    {
+      "path": "skills/charakit-project/references/production-format.ja.md",
+      "sha256": "ff8677d948fbc13f89dbdfe816802d4182ffca81d56848e7de7509b06bc97567"
+    },
+    {
+      "path": "skills/charakit-project/references/project-format.ja.md",
+      "sha256": "cae4cb1d03fd5590dabef86186c86117c62a7976f72a910242251ba196bf5efe"
+    },
+    {
+      "path": "skills/tripo-agent-workflow/SKILL.ja.md",
+      "sha256": "2f873d3347e980583fe9967344b0985e1a78a2bfd413f1c5e17635d173662c7a"
+    },
+    {
+      "path": "skills/tripo-agent-workflow/agents/openai.ja.yaml",
+      "sha256": "e71836575f0d4ed4439dcdd9a1f860000ba990004172e446452ed438558a52b6"
+    },
+    {
+      "path": "skills/tripo-agent-workflow/references/commands.ja.md",
+      "sha256": "ea760addee1e75ab4d388ca5cfef1f2379a0ba526dd4d1dbb60d3b6cd87e714d"
+    },
+    {
+      "path": "skills/tripo-agent-workflow/references/retexture-images.ja.md",
+      "sha256": "8b6df571fba4f2a61b3dfc907328eda876b278a9b0bb41c08f6e422298605402"
+    },
+    {
+      "path": "skills/tripo-agent-workflow/references/tripo-ui.ja.md",
+      "sha256": "5a0bdd512533778bde018d65d43ca1e586d8db4e6f1f1f4ec4f830b1e4e8702c"
+    },
+    {
+      "path": "skills/tripo-character-setup/SKILL.ja.md",
+      "sha256": "8f24c7491a48b0ff72cb33e681eb3a2cb97d78e7ccac3f93606ed9bcd6b0ccdb"
+    },
+    {
+      "path": "skills/tripo-character-setup/references/humanoid-setup-guide.ja.md",
+      "sha256": "393eacd0c2f69920d152213eb4ae8ad1a60f0f2eeb698b84fcf443827fc09c0b"
+    },
+    {
+      "path": "skills/tripo-studio-download/SKILL.ja.md",
+      "sha256": "9d43847201ab204d9a91d44074d943a0d1f16f82bc96071b63dc80283e80a9b3"
+    },
+    {
+      "path": "skills/tripo-studio-download/agents/openai.ja.yaml",
+      "sha256": "f4cebb1cf13452c3900d8e338b12b9693933d288f1945bf97c57c3bcb4788d1b"
+    },
+    {
+      "path": "scripts/agent-session.mjs.ja",
+      "sha256": "327a2a983c36bd0e55edf6ae8e5ebcd2998339f1d7405103330c1ed7cd4844ac"
+    },
+    {
+      "path": "scripts/export-review.py.ja",
+      "sha256": "c6bcf9e3a816000b1848235e90a853f2953426463b799b2969f4168cd6d665a3"
+    },
+    {
+      "path": "scripts/expression-lab.mjs.ja",
+      "sha256": "b4330ac3324fca043fb0d0276783b0617f7261309a3e313f339267462966f007"
+    },
+    {
+      "path": "scripts/expression-mask.py.ja",
+      "sha256": "f020d5fc45e782a1cad7373e4ddc4ef79a0064e191705051a89604f0cfd6f675"
+    },
+    {
+      "path": "scripts/expression-studio.py.ja",
+      "sha256": "fe118bb08151e2647d75d923a991dd7633ac48c376659a5cbf311439856f700e"
+    },
+    {
+      "path": "scripts/extract-donor.py.ja",
+      "sha256": "38d97da0e1c47f066cfbba35189fbf3070f0968aa3737ea5cd60978926f89d55"
+    },
+    {
+      "path": "scripts/mtoon-export.py.ja",
+      "sha256": "502eafbfdb83a1fe7c536d0ab26efdaba03f41a27f734f1177266cf889647991"
+    },
+    {
+      "path": "scripts/project-write.mjs.ja",
+      "sha256": "9554ad1537d8e65e9030b562acaf6c64557fbb1bd4ddc4b6fda204d4e226a4fd"
+    },
+    {
+      "path": "scripts/spring-setup.py.ja",
+      "sha256": "7a2781671edbff6031da334e04e4449e9408115994637e7afa0ad90904d08541"
+    },
+    {
+      "path": "scripts/update-expression-authoring.mjs.ja",
+      "sha256": "dde22be8cc6fd2f98aab40c824abc0c3508436bc0ba737cfd3fa6cc1c1c2d4b3"
+    },
+    {
+      "path": "scripts/update-images.mjs.ja",
+      "sha256": "01bc8723cb9280cedaa8ab045696a70878b090597fe400952a9de637ccd65356"
+    },
+    {
+      "path": "scripts/update-model.mjs.ja",
+      "sha256": "c175f43bb1e129afd492a0fc81f518980560f53f8c280c3d749547d2d3dec1e6"
+    },
+    {
+      "path": "skills/tripo-studio-download/scripts/receive.mjs.ja",
+      "sha256": "33fe7a6533ed9fc7b625a510251811d57953fb2f3ef99b33b4fc26f1e2ac096c"
+    },
+    {
+      "path": "docs/agent-capability-handoff.md",
+      "sha256": "e0be0b9d9ea70dad4fad4890b2db6f92a7165c435121b3ff91c629a375032cb9"
+    },
+    {
+      "path": "public/next-step.css",
+      "sha256": "e550e67134343ae5f3d95e7bef5a70218ddcff1a3305f8b56c13b728b372d301"
+    },
+    {
+      "path": "public/next-step.mjs",
+      "sha256": "8506cc59c3563fc350138c793201142295b0f3307ec3bce6e04e977dbabd8cf8"
+    },
+    {
+      "path": "public/quick-start.css",
+      "sha256": "6990a3d2766a3da938de2e4cbde0dcdbdb5caf0450d3876e1e1b7a56fd49d2b5"
+    },
+    {
+      "path": "public/quick-start.mjs",
+      "sha256": "f72b8d17171dc48d803a4225d90941c311336189630f98cf07b925ff6279eea3"
+    },
+    {
+      "path": "public/vrm-preview.mjs",
+      "sha256": "b2dfa078fc01eea843c44fea859c7fc55adf39510f15aaefb463066ae676a20c"
+    }
+  ]
+}

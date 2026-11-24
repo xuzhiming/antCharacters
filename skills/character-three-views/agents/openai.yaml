@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reference views for balance adjustment"
+  short_description: "After the part images, create and register full-body reference views that preserve the source illustration's design"
+  default_prompt: "Use $character-three-views to create front, character's right side, and back reference views for balance adjustment from the source illustration and the finished part images, and register them in the same project."

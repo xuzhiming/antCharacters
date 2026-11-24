@@ -1,0 +1,4 @@
+interface:
+  display_name: "4-direction head (with hair) and body assets"
+  short_description: "Merge the head and hair, and create 8 assets together with the body in the painting style of a finished illustration"
+  default_prompt: "Use $character-parts-images to create this character's head (with hair) and body in four directions each, painted like a finished VTuber illustration, and return them as an 8-image ZIP."

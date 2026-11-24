@@ -1,0 +1,28 @@
+.model-bar #loadThreeViews{margin-left:auto;white-space:nowrap;font-size:11px;padding:7px 13px}
+#threeViewImages{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+#threeViewImages h2{font-size:14px;font-weight:500;margin:0 0 10px}
+#threeViewImages .image-note{display:block;font-size:11px;line-height:1.7;color:var(--muted);margin:0 0 14px}
+#threeViewImageGrid{grid-template-columns:repeat(3,minmax(0,220px));gap:14px}
+#threeViewImageGrid .image-card{min-height:0;height:auto}
+#threeViewDialog{width:min(760px,94vw);max-width:94vw;max-height:92dvh;padding:22px;overflow:auto}
+#threeViewDialog .dialog-top{margin-bottom:8px}
+#threeViewDialog .three-view-help{color:var(--muted);font-size:12px;line-height:1.7;margin:8px 0 14px}
+.three-view-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#threeViewFilename{font-size:11px;overflow-wrap:anywhere;color:var(--muted);min-height:17px;margin:8px 0}
+#threeViewSideHelp{margin:6px 0}
+#threeViewPreview{height:300px;position:relative;overflow:hidden;background:var(--viewport);border:1px solid var(--line);border-radius:12px;touch-action:none;user-select:none;cursor:grab}
+#threeViewPreview:active{cursor:grabbing}
+#threeViewPreview canvas{display:block;width:100%;height:100%}
+#threeViewPreview .height-readout{left:12px;top:12px;padding:8px 10px}
+#threeViewPreview .height-readout>strong{font-size:18px}
+#threeViewEmpty{position:absolute;bottom:12px;left:12px;right:12px;text-align:center;color:var(--muted);background:var(--panel);padding:8px;border-radius:8px;font-size:12px;pointer-events:none}
+.three-view-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px;margin-top:12px}
+.three-view-controls .field{margin:0}
+.three-view-controls .field>span{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.three-view-controls output{font-variant-numeric:tabular-nums;color:var(--ink)}
+.three-view-controls input{width:100%}
+#threeViewDialog .three-view-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:20px}
+.three-view-actions label{margin-right:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.three-view-actions button{font-size:11px}
+#threeViewError{color:var(--danger,#dc7373);font-size:12px;line-height:1.6}
+@media(max-width:600px){#threeViewDialog{padding:16px}#threeViewPreview{height:250px}.three-view-controls{gap:12px}.three-view-actions label{width:100%;margin-bottom:6px}}

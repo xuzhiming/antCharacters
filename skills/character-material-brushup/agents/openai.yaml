@@ -1,0 +1,4 @@
+interface:
+  display_name: "Brush up to illustration-style painting"
+  short_description: "Keep the shape of the face, hair and outfit, and finish with color layers and material-specific gloss like a completed illustration"
+  default_prompt: "Use $character-material-brushup to observe and articulate the painting of finished works, and finish the face, hair and outfit of these assets to a shared quality standard."

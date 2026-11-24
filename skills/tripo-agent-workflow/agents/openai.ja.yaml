@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tripo制作エージェント"
+  short_description: "候補生成・部位分類・4K再テクスチャ・Tripoリギング"
+  default_prompt: "tripo-agent-workflowで、添付した.charakitの今回の依頼工程を進めてください。"

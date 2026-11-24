@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tripo production agent"
+  short_description: "Candidate generation, part classification, 4K retexture, Tripo rigging"
+  default_prompt: "With tripo-agent-workflow, carry out the requested stage for the attached .charakit."

@@ -1,0 +1,22 @@
+.review-motion-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+[data-panel=review] .form-content>.small-note{display:block;margin:0;font-size:10px;line-height:1.7;color:var(--muted)}
+[data-panel=review] .form-content>.small-note:empty{display:none}
+[data-panel=review] .switch-row{margin:4px 0}
+body[data-stage=review] #journeySteps li:not(:last-child){display:none}
+.review-motion-buttons button{min-height:42px;padding:8px 10px;font-size:11px;line-height:1.5;white-space:normal;overflow-wrap:anywhere}
+.review-motion-buttons button.active{border-color:var(--accent);color:var(--accent-text);background:var(--soft)}
+.review-motion-file{display:flex;align-items:center;gap:8px;min-width:0;font-size:10px;color:var(--muted)}
+.review-motion-file span{min-width:0;overflow-wrap:anywhere;flex:1}.review-motion-file button{padding:4px 8px;font-size:10px;flex-shrink:0}
+.review-motion-file:has(button[hidden]){display:none}
+body[data-stage=review] .model-bar{display:none!important}
+body[data-stage=review] .view-bottom{pointer-events:none}
+body[data-stage=review] #viewHint{font-size:10px}
+body[data-stage=review] #viewport canvas.review-draggable{cursor:grab}
+body[data-stage=review] #viewport canvas.review-draggable:active{cursor:grabbing}
+#vrmMetadataDialog{width:min(520px,90vw);max-height:90vh;overflow:auto}
+#vrmMetadataDialog .field{margin-top:14px}#vrmMetadataDialog textarea{width:100%;resize:vertical;min-height:52px}
+#vrmMetadataDialog details{margin-top:18px}#vrmMetadataDialog .switch-row{margin-top:10px}
+#vrmMetadataDialog .small-note{line-height:1.7;color:var(--muted)}
+#reviewViewportStatus{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;background:var(--viewport);text-align:center}
+#reviewViewportStatus p{max-width:440px;margin:0;color:var(--ink);font-size:14px;line-height:1.8;white-space:pre-line;overflow-wrap:anywhere}
+#reviewViewportStatus button{max-width:100%}

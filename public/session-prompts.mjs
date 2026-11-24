@@ -1,0 +1,21 @@
+import {taskLabels} from './journey.mjs';
+import {koreanSessionPrompt} from './task-translations-ko.mjs';
+import {normalizeLocale} from './locales.mjs';
+import {localizedSessionPrompt} from './session-prompt-localized.mjs';
+const instructions={
+ expressions:'skills/avatar-expression-authoring/SKILL.mdを使い、依頼された目・口・眉の表情を、そのモデルらしく自然で可愛く仕上げてください。指定がなければ同梱の8眼・10口・5眉を作ります。表情タブで読み込んだモデルはproject.jsonのexpressionEditor.imported.pathを入力にし、それ以外は現在のwork/character.blendを保持した作業コピーを使います。タブの調整値も参照し、画像と構造を見て部位・目印・上下の口縁を指定し、同梱のフィット・転送を使います。必要な局所はComputer Useのプロポーショナル編集等で仕上げ、固定カメラの目標と通常顔を見比べ、前後の曲面・眉の印象・目尻・中間強度を整えます。準備・撮影・保存は補助ツールで効率化します。修正できる見た目の差を残件説明だけで終わらせません。仕上がったらhelper.save(export=True)とregisterで同じ正本へ返します。既存VRMは変更しません。',
+ 'image-edit':'指定の画像だけを修正してください。ユーザーがチャットに添えた修正内容に従い、未指定なら内容を確認します。character-material-brushupを参照し、scripts/update-images.mjsで同じ正本へ登録・採用し、画像確認で止めてください。',
+ images:'元絵の1枚絵をデザインの基準に、character-parts-images と character-material-brushup で頭（髪込み）・Tポーズの体の正面・左・右・背面、計8枚を制作します。三面図を部位画像の制作基準に置き換えません。scripts/update-images.mjs で同じ正本へ登録した後、skills/character-three-views/SKILL.md に従い、元絵と完成した部位画像を参照してバランス調整用の全身の正面・本人右側面・背面を制作します。scripts/update-three-views.mjs で同じ正本へ三面図を登録し、8枚と三面図の画像確認で止めてください。',
+ candidates:'tripo-agent-workflow を使い、採用画像の4方向からTripoで頭・体を各4候補（P2.0・25,000四角面）生成します。全候補を登録し、採用せずユーザー確認で止めてください。',
+ materials:'tripo-agent-workflow を使い、採用候補をGLBで三角化して書き出し、Tripoに再アップロードして粗めのセグメンテーションを実行します。結果を基準メッシュとして登録し、部品を目視分類します。再テクスチャは髪・頭・上半身・下半身（腰の衣装、スカートやズボン、脚、靴を含む）・その他アクセサリーの5分類です。対象のない髪・アクセサリーは省略し、大きなリボン等は衣装に付いていても独立したアクセサリーとして判断します。小さな飾りは衣装に含めます。脚・靴・スカート単独のテクスチャや参照画像は作りません。揺れ物の分離・分類は別に保持し、スカートと脚を分離しても再テクスチャでは下半身として一組のFBXと着衣状態の前後ガイド・参照画像に統合します。境界が連結したままの場合や頭側と体側のアクセサリーを一組にできない場合は画像を示して確認します。5分類の部位画像制作、Smart UV、各部位4K再テクスチャ、元の部品へのUV復元、揺れ物を分けた組み立てまで一括で進めてください。組み立て時から scripts/mtoon-export.py で必要な全メッシュのマテリアルへMToonを適用し、元テクスチャ・UV・透明度を保持します。組み立て済みBlendを保存し、以後のモデル読み込みでもMToonを維持してください。頭身調整はユーザーがMToon表示で行います。',
+ rig:'tripo-agent-workflow、avatar-weight-transfer、avatar-spring-setup を使います。配置済みの髪抜きの頭＋体をTripoでリギングし、骨配置だけを読み戻します。scripts/run-local-job.mjs でウェイト転送し、髪と衣装の揺れ物を設定してください。scripts/spring-setup.pyで全対象部位の揺らす／固定する判断と末端付きチェーンを登録します。scripts/mtoon-export.pyで必要な全メッシュをMToon化してwork/character.blendに保存し、scripts/update-model.mjsのblendにも同じファイルを指定して確認用FBXと同じ正本に登録してください。元テクスチャ・UV・透明度を保持します。completeが保存済みBlendからVRMを生成し、構造・MToon・部位別物理応答を自動検査します。見た目の評価・自動修正を完了条件にせず、動作確認で止めてください。',
+ finish:'avatar-spring-setupを使い、VRMのメタデータを確認してください。揺れもの計画を保存したwork/character.blendから続けます。FBXからの再取り込みでSpringBone設定を失わないでください。scripts/mtoon-export.pyに全メッシュとHumanoidリグを明示し、全マテリアルへMToonを適用してexports/avatar.vrmとexports/avatar.blendを保存します。scripts/verify-springs.mjsで実VRMの各部位・チェーンの物理ON/OFF応答を自動検査します。見た目の評価・修正ループは行いません。completeで同じ検査に合格した後、確認範囲と残課題を報告してください。'
+};
+export function sessionPrompt(r,appRoot,origin,locale='ja'){
+ const command=`node "${appRoot.replaceAll('\\','/')}/scripts/agent-session.mjs"`;
+ const lang=normalizeLocale(locale);
+ if(lang==='en'||lang==='zh-CN')return localizedSessionPrompt({kind:r.kind,command,origin,id:r.id,context:r.context},lang);
+ if(normalizeLocale(locale)==='ko')return koreanSessionPrompt({kind:r.kind,command,origin,id:r.id,context:r.context});
+   const prompt=`アバターキットの「${taskLabels[r.kind]}」をお願いします。\n最初に以下を実行し、開いているアプリの最新状態を保存してから作業してください。実行に必要な承認は、Codexの権限設定と実行ツールの承認手順に従ってください。出力の saved: true を確認するまで古いキットで進めないでください。\n\n${command} begin ${origin} ${r.id}\n\n開始コマンドがプロセス作成前に blocked by policy / 実行ポリシーで拒否された場合、同じ拒否を繰り返さず、キットの処理が未実行であることとエラー・設定の要点を報告してください。依頼が失効・入力が変更されていたら、アプリで内容を確認して依頼文をコピーし直してください。成功するまで制作・登録を始めないでください。詳しくはキット内 docs/tutorial.ja.md の「Windows の Codex で開始コマンドが拒否される」を参照してください。\n\n出力された directory/AGENTS.md と、アプリ内の skills/charakit-project/SKILL.md を読んでください。project が唯一の正本です。同じ .charakit を更新し、別名コピーを増やさないでください。\n${r.context?'修正対象: '+r.context.slot+' (imageId: '+r.context.imageId+')\n':''}${instructions[r.kind]}\n\n進捗: ${command} progress ${origin} ${r.id} "処理内容"\n完了: ${command} complete ${origin} ${r.id}\n中断: ${command} fail ${origin} ${r.id} "理由"\nユーザーに手動保存やキットの再添付を求めず、アプリの確認画面へ案内してください。`;
+   return prompt+'\n\nブラウザ操作が必要な場合は、キット内 docs/browser-use.md を読み、ユーザーの既存ブラウザ・タブを再利用してください。アバターキットを開始コマンドのために別画面で開き直さず、依頼を出したタブを維持してください。対象タブがなければ既存ブラウザに追加し、ブラウザが開いていないことを確認した場合だけ新しく起動してください。接続できない場合は接続を案内し、Codex内ブラウザや別セッションへ自動で切り替えないでください。';
+}

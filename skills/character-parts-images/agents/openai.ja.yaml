@@ -1,0 +1,4 @@
+interface:
+  display_name: "頭（髪込み）・体の4方向素材"
+  short_description: "頭と髪を一体にし、体と合わせて完成した立ち絵の塗りで8枚の素材を作ります"
+  default_prompt: "$character-parts-images を使い、このキャラクターの頭（髪込み）・体を完成したVTuber立ち絵の塗りで4方向ずつ制作し、8枚の画像ZIPで返してください。"
