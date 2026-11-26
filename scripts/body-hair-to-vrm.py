@@ -149,13 +149,24 @@ def build_hair_bvh(hair_meshes):
     return BVHTree.FromPolygons(verts, polys)
 
 
-def align_hair_to_head(hair_meshes, body_meshes, rig, head_bone_name, hair_scale_mult, hair_offset):
-    body_min, body_max = meshes_bounds(body_meshes)
+def align_hair_to_head(hair_meshes, body_meshes, rig, head_bone_name, hair_scale_mult, hair_offset, head_meshes=None):
+    all_ref = [*body_meshes, *(head_meshes or ())]
+    body_min, body_max = meshes_bounds(all_ref)
     body_height = max(body_max.z - body_min.z, 1e-4)
 
-    head_bone = rig.data.bones[head_bone_name]
-    head_bone_world = rig.matrix_world @ head_bone.head_local
-    hpts = collect_head_vertices(body_meshes, head_bone_world.z, body_height)
+    if head_meshes:
+        hpts = collect_meshes_points(head_meshes)
+        if len(hpts) < 30:
+            raise RuntimeError('Could not collect enough vertices from independent head mesh.')
+        z0 = float(hpts[:, 2].min())
+        z1 = float(hpts[:, 2].max())
+        hpts_upper = hpts[hpts[:, 2] >= z0 + 0.15 * (z1 - z0)]
+        if len(hpts_upper) >= 30:
+            hpts = hpts_upper
+    else:
+        head_bone = rig.data.bones[head_bone_name]
+        head_bone_world = rig.matrix_world @ head_bone.head_local
+        hpts = collect_head_vertices(body_meshes, head_bone_world.z, body_height)
 
     hair_min, hair_max = meshes_bounds(hair_meshes)
     hair_size = hair_max - hair_min
@@ -168,8 +179,8 @@ def align_hair_to_head(hair_meshes, body_meshes, rig, head_bone_name, hair_scale
     if len(crown_pts) < 20:
         crown_pts = hpts
 
-    px5, px95 = np.percentile(crown_pts[:, 0], [5.0, 95.0])
-    py5, py95 = np.percentile(crown_pts[:, 1], [5.0, 95.0])
+    px5, px95 = np.percentile(crown_pts[:, 0], [2.0, 98.0])
+    py5, py95 = np.percentile(crown_pts[:, 1], [1.0, 99.0])
     cranium_cx = float(0.5 * (px5 + px95))
     cranium_cy = float(0.5 * (py5 + py95))
     cranium_cz = float(head_min[2] + 0.55 * head_h)
@@ -369,7 +380,7 @@ def align_hair_to_head(hair_meshes, body_meshes, rig, head_bone_name, hair_scale
             + 140.0 * (occluded / n_f)
             + 1.0 * ((ds - ds_ref) ** 2)
             + 0.8 * ((ds_x - 1.0) ** 2)
-            + 2.0 * ((dx / head_h) ** 2)
+            + 12.0 * ((dx / head_h) ** 2)
             + 0.2 * ((dy / head_h) ** 2 + (dz / head_h) ** 2)
             + 0.4 * (rx ** 2)
         )
@@ -399,6 +410,8 @@ def align_hair_to_head(hair_meshes, body_meshes, rig, head_bone_name, hair_scale
                 for dv in delta_vals:
                     cand = list(cand_base)
                     cand[axis] += dv
+                    if abs(cand[1]) > 0.08 * head_h:
+                        continue
                     if cand[4] < -0.32 or cand[4] > 0.32:
                         continue
                     loss, cov, occ, inner_med = eval_fit(*cand, ds_ref=1.0)
@@ -413,7 +426,9 @@ def align_hair_to_head(hair_meshes, body_meshes, rig, head_bone_name, hair_scale
     if best_inner_med > 1.05:
         ds_cal = max(0.75, min(1.02, 1.02 / best_inner_med))
     elif 0.0 < best_inner_med < 0.88:
-        ds_cal = min(1.05, 0.94 / best_inner_med)
+        ds_cal = min(1.28, 0.96 / best_inner_med)
+    elif best_cov < 0.80 and best_inner_med == 0.0:
+        ds_cal = 1.15
     else:
         ds_cal = 1.0
 
@@ -424,7 +439,7 @@ def align_hair_to_head(hair_meshes, body_meshes, rig, head_bone_name, hair_scale
 
     # 5. Pass B: final 6-DOF fine-tuning tightly bounded around ds_cal.
     ds_lo = max(0.75, ds_cal * 0.92)
-    ds_hi = min(1.06, ds_cal * 1.05)
+    ds_hi = min(1.32, ds_cal * 1.12)
     pass_b_steps = (
         (0.025, 0.03 * head_h, 0.04),
         (0.01, 0.01 * head_h, 0.015),
@@ -447,9 +462,11 @@ def align_hair_to_head(hair_meshes, body_meshes, rig, head_bone_name, hair_scale
                     cand[axis] += dv
                     if cand[0] < ds_lo or cand[0] > ds_hi:
                         continue
+                    if abs(cand[1]) > 0.08 * head_h:
+                        continue
                     if cand[4] < -0.32 or cand[4] > 0.32:
                         continue
-                    if cand[5] < 0.88 or cand[5] > 1.02:
+                    if cand[5] < 0.88 or cand[5] > 1.12:
                         continue
                     loss, cov, occ, inner_med = eval_fit(*cand, ds_ref=ds_cal)
                     if loss + 1e-7 < best_loss:

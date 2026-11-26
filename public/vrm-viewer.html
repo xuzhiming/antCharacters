@@ -13,6 +13,32 @@
   .bar button { padding: 7px 14px; border: 1px solid #2a3042; border-radius: 8px; background: #171b26; color: #dfe3ee; font: inherit; cursor: pointer; }
   .bar button.on { border-color: #4f8cff; color: #8fb6ff; background: #121a2c; }
   .bar button:hover { background: #1d2330; }
+  .expr-bar {
+    position: fixed;
+    left: 16px;
+    top: 68px;
+    width: 204px;
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+    display: none;
+    flex-direction: column;
+    gap: 7px;
+    padding: 8px 10px;
+    border: 1px solid #2a3042;
+    border-radius: 11px;
+    background: rgba(16, 19, 28, 0.84);
+    backdrop-filter: blur(8px);
+  }
+  .expr-bar.show { display: flex; }
+  .expr-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; font-weight: 600; color: #dfe3ee; }
+  .expr-head button { padding: 4px 8px; border: 1px solid #2a3042; border-radius: 7px; background: #171b26; color: #9eb3d6; font-size: 11px; cursor: pointer; }
+  .expr-head button.on { border-color: #38c98a; color: #8ff0c2; background: #10251e; }
+  .expr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .expr-grid button { padding: 5px 4px; border: 1px solid #2a3042; border-radius: 7px; background: #171b26; color: #dfe3ee; font-size: 11px; cursor: pointer; }
+  .expr-grid button:hover { background: #1d2330; }
+  .expr-grid button.on { border-color: #4f8cff; color: #8fb6ff; background: #121a2c; }
+  .expr-slider { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #9ba5bc; }
+  .expr-slider input { flex: 1; accent-color: #4f8cff; cursor: pointer; }
   .hint { position: fixed; left: 18px; top: 16px; color: #8b93a7; font-size: 12px; line-height: 1.7; }
   .hint b { color: #cfd6e6; font-weight: 600; }
   #error { position: fixed; inset: 0; display: none; place-items: center; color: #ff9b9b; font-size: 14px; text-align: center; padding: 40px; }
@@ -30,6 +56,18 @@
   <button id="walk" type="button">走路</button>
   <button id="physics" type="button" class="on">物理 ON</button>
   <button id="reset" type="button">重置视角</button>
+</div>
+<div id="exprBar" class="expr-bar" aria-label="表情控制">
+  <div class="expr-head">
+    <span>表情试看</span>
+    <button id="autoBlink" type="button" class="on">自动眨眼 ON</button>
+  </div>
+  <div class="expr-slider">
+    <span>强度</span>
+    <input id="exprStrength" type="range" min="0" max="1" step="0.02" value="1">
+    <span id="exprVal">100%</span>
+  </div>
+  <div id="exprGrid" class="expr-grid"></div>
 </div>
 <div id="error"></div>
 <script type="module">
@@ -89,7 +127,76 @@ let mixer = null;
 let walkClip = null;
 let walkOn = false;
 let physicsOn = true;
+let activeExpr = 'neutral';
+let exprStrength = 1.0;
+let autoBlinkOn = true;
+let nextBlinkTimer = 2.4;
+let blinkPhase = -1;
 const clock = new THREE.Clock();
+
+const exprBar = document.getElementById('exprBar');
+const exprGrid = document.getElementById('exprGrid');
+const autoBlinkBtn = document.getElementById('autoBlink');
+const exprStrengthInput = document.getElementById('exprStrength');
+const exprVal = document.getElementById('exprVal');
+
+const EXPR_LABELS = {
+  neutral: '中性',
+  blink: '眨眼',
+  blinkLeft: '左眨眼',
+  blinkRight: '右眨眼',
+  happy: '开心',
+  angry: '生气',
+  sad: '悲伤',
+  relaxed: '放松',
+  surprised: '惊讶',
+  aa: '啊(aa)',
+  ih: '一(ih)',
+  ou: '乌(ou)',
+  ee: '诶(ee)',
+  oh: '哦(oh)',
+};
+const EXPR_ORDER = ['neutral', 'blink', 'happy', 'angry', 'sad', 'relaxed', 'surprised', 'aa', 'ih', 'ou', 'ee', 'oh', 'blinkLeft', 'blinkRight'];
+
+function setupExpressionsUI() {
+  const manager = vrm?.expressionManager;
+  if (!manager) return;
+  const available = new Set(
+    (manager.expressions || [])
+      .filter((e) => e.binds && e.binds.length > 0)
+      .map((e) => e.expressionName),
+  );
+  if (!available.size) return;
+
+  const list = EXPR_ORDER.filter((n) => n === 'neutral' || available.has(n));
+  exprGrid.replaceChildren();
+  for (const name of list) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.expr = name;
+    btn.textContent = EXPR_LABELS[name] || name;
+    if (name === activeExpr) btn.classList.add('on');
+    btn.onclick = () => {
+      activeExpr = name;
+      for (const b of exprGrid.querySelectorAll('button')) {
+        b.classList.toggle('on', b.dataset.expr === activeExpr);
+      }
+    };
+    exprGrid.append(btn);
+  }
+  exprBar.classList.add('show');
+}
+
+autoBlinkBtn.onclick = () => {
+  autoBlinkOn = !autoBlinkOn;
+  autoBlinkBtn.classList.toggle('on', autoBlinkOn);
+  autoBlinkBtn.textContent = '自动眨眼 ' + (autoBlinkOn ? 'ON' : 'OFF');
+};
+
+exprStrengthInput.oninput = () => {
+  exprStrength = Number(exprStrengthInput.value);
+  exprVal.textContent = Math.round(exprStrength * 100) + '%';
+};
 
 function resize() {
   const w = stage.clientWidth || innerWidth;
@@ -117,6 +224,7 @@ async function load() {
     // hair stays at the bind pose while the body animates
     vrm.update(0);
     vrm.springBoneManager?.reset();
+    setupExpressionsUI();
     const box = new THREE.Box3().setFromObject(vrm.scene);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
@@ -170,6 +278,29 @@ function tick() {
   requestAnimationFrame(tick);
   const delta = clock.getDelta();
   if (mixer && walkOn) mixer.update(delta);
+  if (vrm?.expressionManager) {
+    vrm.expressionManager.resetValues();
+    if (activeExpr !== 'neutral') {
+      vrm.expressionManager.setValue(activeExpr, exprStrength);
+    }
+    if (autoBlinkOn && !['blink', 'blinkLeft', 'blinkRight'].includes(activeExpr)) {
+      if (blinkPhase < 0) {
+        nextBlinkTimer -= delta;
+        if (nextBlinkTimer <= 0) {
+          blinkPhase = 0;
+          nextBlinkTimer = 2.8 + Math.random() * 2.4;
+        }
+      } else {
+        blinkPhase += delta / 0.16;
+        if (blinkPhase >= 1) {
+          blinkPhase = -1;
+        } else {
+          const w = blinkPhase < 0.5 ? blinkPhase * 2 : (1 - blinkPhase) * 2;
+          vrm.expressionManager.setValue('blink', w);
+        }
+      }
+    }
+  }
   if (vrm) vrm.update(physicsOn ? delta : 0);
   controls.update();
   renderer.render(scene, camera);

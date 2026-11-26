@@ -228,6 +228,61 @@
     word-break: break-all;
   }
   .dropzone-file.selected { color: #9fc0ff; }
+  .dropzone-sub {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(54, 65, 96, 0.7);
+    font-size: 11px;
+    color: #c5d0e8;
+    position: relative;
+    z-index: 2;
+  }
+  .dropzone-sub label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .clear-file-btn {
+    position: relative;
+    z-index: 2;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .clear-file-btn:hover { color: var(--text); border-color: var(--accent); }
+  .head-adjust-panel {
+    border: 1px solid rgba(168, 128, 255, 0.45);
+    border-radius: 10px;
+    background: #17152a;
+    padding: 11px 12px;
+    display: none;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .head-adjust-panel.show { display: flex; }
+  .head-adjust-panel h2 { margin: 0; font-size: 13px; color: #d4c4ff; }
+  .action-bar {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    padding: 9px 11px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .action-bar.show { display: flex; }
+  .expr-target-badge {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #163038;
+    color: #8ee8cc;
+    border: 1px solid rgba(56, 201, 138, 0.35);
+  }
   label.field {
     display: flex;
     flex-direction: column;
@@ -314,6 +369,114 @@
     align-items: center;
     gap: 6px;
     cursor: pointer;
+  }
+  .expr-panel {
+    border: 1px solid rgba(56, 201, 138, 0.38);
+    border-radius: 10px;
+    background: #101c1f;
+    padding: 11px 12px;
+    display: none;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .expr-panel.show { display: flex; }
+  .expr-panel h2 {
+    margin: 0;
+    font-size: 13px;
+    color: #9cefd0;
+  }
+  .expr-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    font-size: 12px;
+    color: #cfd6e8;
+  }
+  .expr-options label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+  .pin-group-title {
+    font-size: 11px;
+    color: var(--muted);
+    margin: 2px 0 3px;
+  }
+  .pin-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+  .pin-btn {
+    padding: 4px 5px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: #cfd6e8;
+    font-size: 11px;
+    cursor: pointer;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pin-btn:hover { border-color: var(--accent); color: #fff; }
+  .pin-btn.active { border-color: #2ee6d6; background: #14303a; color: #9cf8f0; font-weight: 600; }
+  .pin-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .pin-tab-btn {
+    padding: 4px 4px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #111622;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .pin-tab-btn.active {
+    border-color: var(--accent);
+    background: #1a243b;
+    color: #dbe6ff;
+    font-weight: 600;
+  }
+  .pin-pane { display: none; }
+  .pin-pane.active { display: block; }
+  .pin-hint {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .expr-preview-box {
+    border-top: 1px solid rgba(56, 201, 138, 0.25);
+    padding-top: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .expr-preview-box.show { display: flex; }
+  .head-only-actions {
+    border-top: 1px solid rgba(56, 201, 138, 0.25);
+    padding-top: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .head-only-actions.show { display: flex; }
+  select.expr-select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
   }
   details.advanced {
     border: 1px solid var(--border);
@@ -498,24 +661,48 @@
       <h1>身体 + 头发 过渡微调与导出</h1>
       <a href="/">Charakuru 主界面</a>
     </div>
-    <p class="subtitle">上传身体与头发模型后，先进入 3D 过渡窗口微调头发大小与位置，确认后自动同步到 VRM 动作预览与导出文件。</p>
+    <p class="subtitle">支持纯头部测试（可选自动局部开刀分眼眶/睫毛/开口唇缝）以及两段/三段全身装配，实时生成 23 键高清表情。</p>
 
     <div class="dropzone" id="bodyDrop">
-      <input id="bodyInput" type="file" accept=".fbx,.glb,.gltf,.zip" aria-label="上传 T-pose 无头发身体模型">
+      <input id="bodyInput" type="file" accept=".fbx,.glb,.gltf,.zip" aria-label="上传 T-pose 身体模型">
       <div class="dropzone-title">
-        <span>1. T-pose 无头发身体模型</span>
+        <span>1. T-pose 身体模型（导出 VRM 必填 · 仅测头部可留空）</span>
         <span class="dropzone-badge">.fbx / .glb / .zip</span>
       </div>
-      <div class="dropzone-file" id="bodyFileLabel">点击选择或拖拽文件到此处</div>
+      <div class="dropzone-file" id="bodyFileLabel">留空且仅上传头部时，自动进入纯头部测试模式</div>
+      <div class="dropzone-sub">
+        <span>导出全身 VRM 1.0 时需要身体骨骼</span>
+        <button id="clearBodyBtn" type="button" class="clear-file-btn" hidden>清除</button>
+      </div>
+    </div>
+
+    <div class="dropzone" id="headDrop">
+      <input id="headInput" type="file" accept=".fbx,.glb,.gltf,.zip" aria-label="上传独立高模头部">
+      <div class="dropzone-title">
+        <span>2. 独立高模头部（可单独测试 · 推荐做高清五官）</span>
+        <span class="dropzone-badge">.fbx / .glb / .zip</span>
+      </div>
+      <div class="dropzone-file" id="headFileLabel">未选择（留空则直接使用身体自带头部）</div>
+      <div class="dropzone-sub">
+        <label><input id="autoSurgeryToggle" type="checkbox" checked><span>自动局部开刀（分眼眶/眼片/立体睫毛/开口唇缝）</span></label>
+        <button id="clearHeadBtn" type="button" class="clear-file-btn" hidden>清除</button>
+      </div>
+      <div class="dropzone-sub">
+        <label><input id="trimBodyHeadToggle" type="checkbox" checked><span>自动裁切身体旧头（保留肩衣）</span></label>
+      </div>
     </div>
 
     <div class="dropzone" id="hairDrop">
       <input id="hairInput" type="file" accept=".fbx,.glb,.gltf,.zip" aria-label="上传头发模型">
       <div class="dropzone-title">
-        <span>2. 头发模型</span>
+        <span>3. 头发模型（可选 · 若头部自带头发可留空）</span>
         <span class="dropzone-badge">.fbx / .glb / .zip</span>
       </div>
       <div class="dropzone-file" id="hairFileLabel">点击选择或拖拽文件到此处</div>
+      <div class="dropzone-sub">
+        <span>自动拟合到当前头部颅顶</span>
+        <button id="clearHairBtn" type="button" class="clear-file-btn" hidden>清除</button>
+      </div>
     </div>
 
     <label class="field">
@@ -524,6 +711,55 @@
     </label>
 
     <button id="stageBtn" class="primary" type="button">上传并进入过渡调整</button>
+
+    <section id="headAdjustPanel" class="head-adjust-panel" aria-label="独立头部比例与接颈微调">
+      <div class="adjust-header">
+        <h2>头部比例与接颈微调</h2>
+        <button id="resetHeadAdjustBtn" type="button">重置头部对齐</button>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-head">
+          <span>头部等比缩放 <span class="slider-hint">小 ↔ 大</span></span>
+          <span class="slider-val" id="valHeadScale">1.000×</span>
+        </div>
+        <input id="headSliderScale" type="range" min="0.60" max="1.50" step="0.005" value="1.00" aria-label="头部等比缩放">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-head">
+          <span>头部左右偏移 <span class="slider-hint">左(-) ↔ 右(+)</span></span>
+          <span class="slider-val" id="valHeadX">0.000</span>
+        </div>
+        <input id="headSliderX" type="range" min="-0.12" max="0.12" step="0.001" value="0" aria-label="头部左右偏移">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-head">
+          <span>头部前后偏移 <span class="slider-hint">后(-) ↔ 前(+)</span></span>
+          <span class="slider-val" id="valHeadFB">0.000</span>
+        </div>
+        <input id="headSliderFB" type="range" min="-0.12" max="0.12" step="0.001" value="0" aria-label="头部前后偏移">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-head">
+          <span>头部上下偏移 <span class="slider-hint">下(-) ↔ 上(+)</span></span>
+          <span class="slider-val" id="valHeadZ">0.000</span>
+        </div>
+        <input id="headSliderZ" type="range" min="-0.12" max="0.12" step="0.001" value="0" aria-label="头部上下偏移">
+      </div>
+
+      <label class="field">
+        <span>头部朝向附加旋转</span>
+        <select id="headRotZSelect" class="expr-select">
+          <option value="0">0°（保持自动朝向）</option>
+          <option value="90">+90°</option>
+          <option value="-90">-90°</option>
+          <option value="180">180°（掉头）</option>
+        </select>
+      </label>
+    </section>
 
     <section id="adjustPanel" class="adjust-panel" aria-label="头发实时调整">
       <div class="adjust-header">
@@ -562,7 +798,9 @@
         </div>
         <input id="sliderZ" type="range" min="-0.12" max="0.12" step="0.001" value="0" aria-label="上下偏移头发">
       </div>
+    </section>
 
+    <section id="exportActionBar" class="action-bar" aria-label="同步与预览操作">
       <div class="toggle-row">
         <label>
           <input id="autoApplyToggle" type="checkbox" checked>
@@ -573,6 +811,118 @@
       <div class="btn-row">
         <button id="applyNowBtn" class="secondary" type="button" style="flex:1">立即导出 VRM</button>
         <button id="gotoVrmBtn" class="secondary" type="button" style="flex:1">查看 VRM 动作预览</button>
+      </div>
+    </section>
+
+    <section id="exprPanel" class="expr-panel" aria-label="人物表情建模">
+      <div class="adjust-header">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <h2>表情建模（23 键）</h2>
+          <span id="exprTargetBadge" class="expr-target-badge">头身一体</span>
+        </div>
+        <button id="resetPinsBtn" type="button">重置默认点位</button>
+      </div>
+
+      <div class="expr-options">
+        <label><input id="showPinsToggle" type="checkbox" checked><span>显示 3D 点位</span></label>
+        <label><input id="hideHairForPins" type="checkbox"><span>临时隐藏头发</span></label>
+        <label><input id="mirrorPinsToggle" type="checkbox" checked><span>左右对称</span></label>
+      </div>
+
+      <div>
+        <div class="pin-group-title">1. 直接点击 3D 脸上彩色点位，或切换下方部位（42 点高精度轮廓）微调</div>
+        <div class="pin-tabs" role="tablist" aria-label="五官轮廓分类">
+          <button type="button" class="pin-tab-btn active" data-pintab="eyeL">左眼(12)</button>
+          <button type="button" class="pin-tab-btn" data-pintab="eyeR">右眼(12)</button>
+          <button type="button" class="pin-tab-btn" data-pintab="mouth">嘴唇(12)</button>
+          <button type="button" class="pin-tab-btn" data-pintab="brow">眉毛(6)</button>
+        </div>
+        <div class="pin-pane active" data-pinpane="eyeL">
+          <div class="pin-grid">
+            <button type="button" class="pin-btn" data-pin="eyeInnerL">左内眼角</button>
+            <button type="button" class="pin-btn" data-pin="eyeUpper1L">左上1</button>
+            <button type="button" class="pin-btn" data-pin="eyeUpper2L">左上2</button>
+            <button type="button" class="pin-btn" data-pin="eyeUpperL">左上中</button>
+            <button type="button" class="pin-btn" data-pin="eyeUpper4L">左上4</button>
+            <button type="button" class="pin-btn" data-pin="eyeUpper5L">左上5</button>
+            <button type="button" class="pin-btn" data-pin="eyeOuterL">左外眼角</button>
+            <button type="button" class="pin-btn" data-pin="eyeLower5L">左下5</button>
+            <button type="button" class="pin-btn" data-pin="eyeLower4L">左下4</button>
+            <button type="button" class="pin-btn" data-pin="eyeLowerL">左下中</button>
+            <button type="button" class="pin-btn" data-pin="eyeLower2L">左下2</button>
+            <button type="button" class="pin-btn" data-pin="eyeLower1L">左下1</button>
+          </div>
+        </div>
+        <div class="pin-pane" data-pinpane="eyeR">
+          <div class="pin-grid">
+            <button type="button" class="pin-btn" data-pin="eyeInnerR">右内眼角</button>
+            <button type="button" class="pin-btn" data-pin="eyeUpper1R">右上1</button>
+            <button type="button" class="pin-btn" data-pin="eyeUpper2R">右上2</button>
+            <button type="button" class="pin-btn" data-pin="eyeUpperR">右上中</button>
+            <button type="button" class="pin-btn" data-pin="eyeUpper4R">右上4</button>
+            <button type="button" class="pin-btn" data-pin="eyeUpper5R">右上5</button>
+            <button type="button" class="pin-btn" data-pin="eyeOuterR">右外眼角</button>
+            <button type="button" class="pin-btn" data-pin="eyeLower5R">右下5</button>
+            <button type="button" class="pin-btn" data-pin="eyeLower4R">右下4</button>
+            <button type="button" class="pin-btn" data-pin="eyeLowerR">右下中</button>
+            <button type="button" class="pin-btn" data-pin="eyeLower2R">右下2</button>
+            <button type="button" class="pin-btn" data-pin="eyeLower1R">右下1</button>
+          </div>
+        </div>
+        <div class="pin-pane" data-pinpane="mouth">
+          <div class="pin-grid">
+            <button type="button" class="pin-btn" data-pin="mouthCornerL">左嘴角</button>
+            <button type="button" class="pin-btn" data-pin="mouthUpperL2">上左外</button>
+            <button type="button" class="pin-btn" data-pin="mouthUpperL1">上左峰</button>
+            <button type="button" class="pin-btn" data-pin="mouthUpper">上唇中</button>
+            <button type="button" class="pin-btn" data-pin="mouthUpperR1">上右峰</button>
+            <button type="button" class="pin-btn" data-pin="mouthUpperR2">上右外</button>
+            <button type="button" class="pin-btn" data-pin="mouthCornerR">右嘴角</button>
+            <button type="button" class="pin-btn" data-pin="mouthLowerR2">下右外</button>
+            <button type="button" class="pin-btn" data-pin="mouthLowerR1">下右内</button>
+            <button type="button" class="pin-btn" data-pin="mouthLower">下唇中</button>
+            <button type="button" class="pin-btn" data-pin="mouthLowerL1">下左内</button>
+            <button type="button" class="pin-btn" data-pin="mouthLowerL2">下左外</button>
+          </div>
+        </div>
+        <div class="pin-pane" data-pinpane="brow">
+          <div class="pin-grid" style="grid-template-columns:repeat(3,1fr)">
+            <button type="button" class="pin-btn" data-pin="browInnerL">左眉内</button>
+            <button type="button" class="pin-btn" data-pin="browMiddleL">左眉峰</button>
+            <button type="button" class="pin-btn" data-pin="browOuterL">左眉外</button>
+            <button type="button" class="pin-btn" data-pin="browInnerR">右眉内</button>
+            <button type="button" class="pin-btn" data-pin="browMiddleR">右眉峰</button>
+            <button type="button" class="pin-btn" data-pin="browOuterR">右眉外</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pinHint" class="pin-hint">可直接使用自动投射点位生成表情，或选中上方按钮后在 3D 脸上左键重定位。</div>
+
+      <div class="expr-options">
+        <label><input id="partEyesToggle" type="checkbox" checked><span>眼睛(8)</span></label>
+        <label><input id="partMouthToggle" type="checkbox" checked><span>嘴巴(10)</span></label>
+        <label><input id="partBrowsToggle" type="checkbox" checked><span>眉毛(5)</span></label>
+        <label><input id="includeExprInVrm" type="checkbox" checked><span>导出时绑定 VRM 表情</span></label>
+      </div>
+
+      <button id="generateExprBtn" class="primary" type="button" style="background:#26a678">生成表情并同步到预览</button>
+
+      <div id="exprPreviewBox" class="expr-preview-box">
+        <div class="slider-head">
+          <span>过渡窗口表情实时试看</span>
+          <span class="slider-val" id="exprPreviewVal">100%</span>
+        </div>
+        <select id="exprPreviewSelect" class="expr-select" aria-label="选择试看表情"></select>
+        <input id="exprPreviewStrength" type="range" min="0" max="1" step="0.01" value="1" aria-label="表情试看强度">
+      </div>
+
+      <div id="headOnlyActions" class="head-only-actions">
+        <div class="btn-row">
+          <a id="downloadHeadExprGlb" class="btn-link primary" download>下载表情 GLB</a>
+          <a id="downloadHeadExprBlend" class="btn-link" download>下载表情 Blend</a>
+        </div>
+        <button id="openExprLabBtn" class="secondary" type="button" style="width:100%">打开 Expression Lab 对比视图</button>
       </div>
     </section>
 
@@ -658,15 +1008,35 @@ import { OrbitControls } from 'three/addons/OrbitControls.js';
 const $ = (s) => document.querySelector(s);
 
 const bodyInput = $('#bodyInput');
+const headInput = $('#headInput');
 const hairInput = $('#hairInput');
 const bodyDrop = $('#bodyDrop');
+const headDrop = $('#headDrop');
 const hairDrop = $('#hairDrop');
 const bodyFileLabel = $('#bodyFileLabel');
+const headFileLabel = $('#headFileLabel');
 const hairFileLabel = $('#hairFileLabel');
+const clearBodyBtn = $('#clearBodyBtn');
+const clearHeadBtn = $('#clearHeadBtn');
+const clearHairBtn = $('#clearHairBtn');
+const autoSurgeryToggle = $('#autoSurgeryToggle');
+const trimBodyHeadToggle = $('#trimBodyHeadToggle');
 const modelNameInput = $('#modelName');
 const targetHeightInput = $('#targetHeight');
 const authorInput = $('#author');
 const stageBtn = $('#stageBtn');
+
+const headAdjustPanel = $('#headAdjustPanel');
+const resetHeadAdjustBtn = $('#resetHeadAdjustBtn');
+const headSliderScale = $('#headSliderScale');
+const headSliderX = $('#headSliderX');
+const headSliderFB = $('#headSliderFB');
+const headSliderZ = $('#headSliderZ');
+const headRotZSelect = $('#headRotZSelect');
+const valHeadScale = $('#valHeadScale');
+const valHeadX = $('#valHeadX');
+const valHeadFB = $('#valHeadFB');
+const valHeadZ = $('#valHeadZ');
 
 const adjustPanel = $('#adjustPanel');
 const resetAdjustBtn = $('#resetAdjustBtn');
@@ -678,9 +1048,31 @@ const valScale = $('#valScale');
 const valX = $('#valX');
 const valFB = $('#valFB');
 const valZ = $('#valZ');
+const exportActionBar = $('#exportActionBar');
 const autoApplyToggle = $('#autoApplyToggle');
 const applyNowBtn = $('#applyNowBtn');
 const gotoVrmBtn = $('#gotoVrmBtn');
+
+const exprPanel = $('#exprPanel');
+const exprTargetBadge = $('#exprTargetBadge');
+const resetPinsBtn = $('#resetPinsBtn');
+const showPinsToggle = $('#showPinsToggle');
+const hideHairForPins = $('#hideHairForPins');
+const mirrorPinsToggle = $('#mirrorPinsToggle');
+const pinHint = $('#pinHint');
+const partEyesToggle = $('#partEyesToggle');
+const partMouthToggle = $('#partMouthToggle');
+const partBrowsToggle = $('#partBrowsToggle');
+const includeExprInVrm = $('#includeExprInVrm');
+const generateExprBtn = $('#generateExprBtn');
+const exprPreviewBox = $('#exprPreviewBox');
+const exprPreviewSelect = $('#exprPreviewSelect');
+const exprPreviewStrength = $('#exprPreviewStrength');
+const exprPreviewVal = $('#exprPreviewVal');
+const headOnlyActions = $('#headOnlyActions');
+const downloadHeadExprGlb = $('#downloadHeadExprGlb');
+const downloadHeadExprBlend = $('#downloadHeadExprBlend');
+const openExprLabBtn = $('#openExprLabBtn');
 
 const statusBox = $('#statusBox');
 const logDetails = $('#logDetails');
@@ -740,9 +1132,69 @@ const transitionRoot = new THREE.Group();
 scene.add(transitionRoot);
 
 let bodyGroup = null;
+let headGroup = null;
 let hairPivot = null;
-let pivotBaseGlTF = new THREE.Vector3();
+const headPivotGroup = new THREE.Group();
+transitionRoot.add(headPivotGroup);
+const headPivotBaseGlTF = new THREE.Vector3();
+const pivotBaseGlTF = new THREE.Vector3();
 let bodyBoundsGlTF = { center: new THREE.Vector3(0, 0.9, 0), height: 1.6, minY: 0 };
+
+const pinGroup = new THREE.Group();
+headPivotGroup.add(pinGroup);
+const pinMeshes = new Map();
+const landmarksGlTF = {};
+let defaultLandmarksGlTF = {};
+let selectedPinKey = null;
+let morphTargetsByName = new Map();
+let exprBusy = false;
+
+const PIN_COLORS = {
+  eyeInnerL: 0x2ee6d6, eyeUpper1L: 0x2ee6d6, eyeUpper2L: 0x2ee6d6, eyeUpperL: 0x2ee6d6, eyeUpper4L: 0x2ee6d6, eyeUpper5L: 0x2ee6d6,
+  eyeOuterL: 0x2ee6d6, eyeLower5L: 0x2ee6d6, eyeLower4L: 0x2ee6d6, eyeLowerL: 0x2ee6d6, eyeLower2L: 0x2ee6d6, eyeLower1L: 0x2ee6d6,
+  eyeInnerR: 0x2ee6d6, eyeUpper1R: 0x2ee6d6, eyeUpper2R: 0x2ee6d6, eyeUpperR: 0x2ee6d6, eyeUpper4R: 0x2ee6d6, eyeUpper5R: 0x2ee6d6,
+  eyeOuterR: 0x2ee6d6, eyeLower5R: 0x2ee6d6, eyeLower4R: 0x2ee6d6, eyeLowerR: 0x2ee6d6, eyeLower2R: 0x2ee6d6, eyeLower1R: 0x2ee6d6,
+  mouthCornerL: 0xff9f43, mouthCornerR: 0xff9f43,
+  mouthUpperL2: 0xff4d6d, mouthUpperL1: 0xff4d6d, mouthUpper: 0xff4d6d, mouthUpperR1: 0xff4d6d, mouthUpperR2: 0xff4d6d,
+  mouthLowerL2: 0x4fa3ff, mouthLowerL1: 0x4fa3ff, mouthLower: 0x4fa3ff, mouthLowerR1: 0x4fa3ff, mouthLowerR2: 0x4fa3ff,
+  browInnerL: 0xffcf4a, browMiddleL: 0xffcf4a, browOuterL: 0xffcf4a,
+  browInnerR: 0xffcf4a, browMiddleR: 0xffcf4a, browOuterR: 0xffcf4a,
+};
+const MIRROR_PAIRS = {
+  eyeInnerL: 'eyeInnerR', eyeInnerR: 'eyeInnerL',
+  eyeUpper1L: 'eyeUpper1R', eyeUpper1R: 'eyeUpper1L',
+  eyeUpper2L: 'eyeUpper2R', eyeUpper2R: 'eyeUpper2L',
+  eyeUpperL: 'eyeUpperR', eyeUpperR: 'eyeUpperL',
+  eyeUpper4L: 'eyeUpper4R', eyeUpper4R: 'eyeUpper4L',
+  eyeUpper5L: 'eyeUpper5R', eyeUpper5R: 'eyeUpper5L',
+  eyeOuterL: 'eyeOuterR', eyeOuterR: 'eyeOuterL',
+  eyeLower5L: 'eyeLower5R', eyeLower5R: 'eyeLower5L',
+  eyeLower4L: 'eyeLower4R', eyeLower4R: 'eyeLower4L',
+  eyeLowerL: 'eyeLowerR', eyeLowerR: 'eyeLowerL',
+  eyeLower2L: 'eyeLower2R', eyeLower2R: 'eyeLower2L',
+  eyeLower1L: 'eyeLower1R', eyeLower1R: 'eyeLower1L',
+  mouthCornerL: 'mouthCornerR', mouthCornerR: 'mouthCornerL',
+  mouthUpperL1: 'mouthUpperR1', mouthUpperR1: 'mouthUpperL1',
+  mouthUpperL2: 'mouthUpperR2', mouthUpperR2: 'mouthUpperL2',
+  mouthLowerL1: 'mouthLowerR1', mouthLowerR1: 'mouthLowerL1',
+  mouthLowerL2: 'mouthLowerR2', mouthLowerR2: 'mouthLowerL2',
+  browInnerL: 'browInnerR', browInnerR: 'browInnerL',
+  browMiddleL: 'browMiddleR', browMiddleR: 'browMiddleL',
+  browOuterL: 'browOuterR', browOuterR: 'browOuterL',
+};
+const COMBINED_PREVIEW_PRESETS = {
+  happy: { label: '组合：开心 (happy)', keys: { EA_happy_eye: 1, EA_happy_mouth: 1, EA_brow_happy: 0.8 } },
+  angry: { label: '组合：生气 (angry)', keys: { EA_angry_eye: 1, EA_angry_mouth: 1, EA_brow_angry: 1 } },
+  sad: { label: '组合：悲伤 (sad)', keys: { EA_sad_eye: 1, EA_sad_mouth: 1, EA_brow_sad: 1 } },
+  relaxed: { label: '组合：放松 (relaxed)', keys: { EA_relaxed_eye: 1, EA_relaxed_mouth: 1, EA_brow_relaxed: 0.8 } },
+  surprised: { label: '组合：惊讶 (surprised)', keys: { EA_surprised_eye: 1, EA_surprised_mouth: 1, EA_brow_surprised: 1 } },
+  blink: { label: '组合：眨眼 (blink)', keys: { EA_blink: 1 } },
+  aa: { label: '口型：啊 (aa)', keys: { EA_aa: 1 } },
+  ih: { label: '口型：一 (ih)', keys: { EA_ih: 1 } },
+  ou: { label: '口型：乌 (ou)', keys: { EA_ou: 1 } },
+  ee: { label: '口型：诶 (ee)', keys: { EA_ee: 1 } },
+  oh: { label: '口型：哦 (oh)', keys: { EA_oh: 1 } },
+};
 
 const gltfLoader = new GLTFLoader();
 
@@ -770,9 +1222,40 @@ function setCameraPreset(preset) {
   for (const btn of document.querySelectorAll('.camera-bar button')) {
     btn.classList.toggle('active', btn.dataset.view === preset);
   }
-  const H = Math.max(bodyBoundsGlTF.height, 0.2);
-  const headCenter = pivotBaseGlTF.clone();
+  const isHeadOnly = Boolean(currentSession?.data?.headOnly || !currentSession?.data?.hasBody);
   const fullCenter = bodyBoundsGlTF.center.clone();
+  if (isHeadOnly) {
+    const headH = Math.max(bodyBoundsGlTF.headHeight || bodyBoundsGlTF.height || 0.25, 0.15);
+    const headCenter = fullCenter;
+    if (preset === 'head') {
+      controls.target.copy(headCenter);
+      camera.position.set(headCenter.x, headCenter.y + 0.06 * headH, headCenter.z + 2.15 * headH);
+    } else if (preset === 'full') {
+      controls.target.copy(headCenter);
+      camera.position.set(headCenter.x, headCenter.y + 0.12 * headH, headCenter.z + 2.8 * headH);
+    } else if (preset === 'front') {
+      controls.target.copy(headCenter);
+      camera.position.set(headCenter.x, headCenter.y, headCenter.z + 1.85 * headH);
+    } else if (preset === 'side') {
+      controls.target.copy(headCenter);
+      camera.position.set(headCenter.x + 2.0 * headH, headCenter.y, headCenter.z);
+    } else if (preset === 'back') {
+      controls.target.copy(headCenter);
+      camera.position.set(headCenter.x, headCenter.y, headCenter.z - 2.0 * headH);
+    }
+    controls.minDistance = 0.45 * headH;
+    controls.maxDistance = 8.0 * headH;
+    controls.update();
+    return;
+  }
+
+  const H = Math.max(bodyBoundsGlTF.height, 0.2);
+  const headCenter = new THREE.Vector3();
+  if (currentSession?.data?.hasHead) {
+    headPivotGroup.localToWorld(headCenter.copy(pivotBaseGlTF));
+  } else {
+    headCenter.copy(pivotBaseGlTF);
+  }
 
   if (preset === 'head') {
     controls.target.copy(headCenter);
@@ -838,19 +1321,29 @@ function setActiveTab(tab) {
 tabTransition.onclick = () => setActiveTab('transition');
 tabVrm.onclick = () => setActiveTab('vrm');
 
-function bindDropzone(zone, input, label, onSelect) {
+function bindDropzone(zone, input, label, { emptyText = '点击选择或拖拽文件到此处', clearBtn = null, onSelect = null } = {}) {
   const update = () => {
     const f = input.files?.[0];
     if (f) {
       label.textContent = `${f.name} (${formatBytes(f.size)})`;
       label.classList.add('selected');
+      if (clearBtn) clearBtn.hidden = false;
       onSelect?.(f);
     } else {
-      label.textContent = '点击选择或拖拽文件到此处';
+      label.textContent = emptyText;
       label.classList.remove('selected');
+      if (clearBtn) clearBtn.hidden = true;
     }
   };
   input.addEventListener('change', update);
+  if (clearBtn) {
+    clearBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      input.value = '';
+      update();
+    };
+  }
   zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
   zone.addEventListener('drop', (e) => {
@@ -865,13 +1358,30 @@ function bindDropzone(zone, input, label, onSelect) {
   });
 }
 
-bindDropzone(bodyDrop, bodyInput, bodyFileLabel, (file) => {
-  if (!modelNameInput.value.trim()) {
-    const stem = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
-    if (stem) modelNameInput.value = stem;
-  }
+bindDropzone(bodyDrop, bodyInput, bodyFileLabel, {
+  emptyText: '留空且仅上传头部时，自动进入纯头部测试模式',
+  clearBtn: clearBodyBtn,
+  onSelect: (file) => {
+    if (!modelNameInput.value.trim()) {
+      const stem = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
+      if (stem) modelNameInput.value = stem;
+    }
+  },
 });
-bindDropzone(hairDrop, hairInput, hairFileLabel);
+bindDropzone(headDrop, headInput, headFileLabel, {
+  emptyText: '未选择（留空则直接使用身体自带头部）',
+  clearBtn: clearHeadBtn,
+  onSelect: (file) => {
+    if (!bodyInput.files?.length && !modelNameInput.value.trim()) {
+      const stem = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
+      if (stem) modelNameInput.value = stem;
+    }
+  },
+});
+bindDropzone(hairDrop, hairInput, hairFileLabel, {
+  emptyText: '点击选择或拖拽文件到此处（可选）',
+  clearBtn: clearHairBtn,
+});
 
 function getSliderParams() {
   return {
@@ -879,6 +1389,11 @@ function getSliderParams() {
     offsetX: Number(sliderX.value) || 0.0,
     offsetFB: Number(sliderFB.value) || 0.0,
     offsetZ: Number(sliderZ.value) || 0.0,
+    headScaleMult: Number(headSliderScale.value) || 1.0,
+    headOffsetX: Number(headSliderX.value) || 0.0,
+    headOffsetFB: Number(headSliderFB.value) || 0.0,
+    headOffsetZ: Number(headSliderZ.value) || 0.0,
+    headRotZ: Number(headRotZSelect.value) || 0.0,
   };
 }
 
@@ -888,59 +1403,389 @@ function updateSliderReadouts() {
   valX.textContent = `${p.offsetX >= 0 ? '+' : ''}${p.offsetX.toFixed(3)}`;
   valFB.textContent = `${p.offsetFB >= 0 ? '+' : ''}${p.offsetFB.toFixed(3)}`;
   valZ.textContent = `${p.offsetZ >= 0 ? '+' : ''}${p.offsetZ.toFixed(3)}`;
+  valHeadScale.textContent = `${p.headScaleMult.toFixed(3)}×`;
+  valHeadX.textContent = `${p.headOffsetX >= 0 ? '+' : ''}${p.headOffsetX.toFixed(3)}`;
+  valHeadFB.textContent = `${p.headOffsetFB >= 0 ? '+' : ''}${p.headOffsetFB.toFixed(3)}`;
+  valHeadZ.textContent = `${p.headOffsetZ >= 0 ? '+' : ''}${p.headOffsetZ.toFixed(3)}`;
   return p;
 }
 
 function applySlidersToViewport() {
   const p = updateSliderReadouts();
-  if (!hairPivot || !currentSession) return p;
+  if (!currentSession) return p;
   const H = Number(currentSession.data.bodyHeight) || 1.6;
-  // Exact match to finalize-staged-vrm.py coordinate mapping:
-  // Blender (X, Y, Z) -> Three.js Y-up (X, Z, -Y)
-  hairPivot.scale.setScalar(p.scaleMult);
-  hairPivot.position.set(
-    pivotBaseGlTF.x + p.offsetX * H,
-    pivotBaseGlTF.y + p.offsetZ * H,
-    pivotBaseGlTF.z + p.offsetFB * H,
-  );
+  if (currentSession.data.hasHead) {
+    headPivotGroup.scale.setScalar(p.headScaleMult);
+    headPivotGroup.rotation.set(0, (p.headRotZ * Math.PI) / 180, 0);
+    headPivotGroup.position.set(
+      headPivotBaseGlTF.x + p.headOffsetX * H,
+      headPivotBaseGlTF.y + p.headOffsetZ * H,
+      headPivotBaseGlTF.z + p.headOffsetFB * H,
+    );
+  } else {
+    headPivotGroup.scale.setScalar(1);
+    headPivotGroup.rotation.set(0, 0, 0);
+    headPivotGroup.position.set(0, 0, 0);
+  }
+  if (hairPivot) {
+    // Blender (X, Y, Z) -> Three.js Y-up (X, Z, -Y)
+    hairPivot.scale.setScalar(p.scaleMult);
+    hairPivot.position.set(
+      pivotBaseGlTF.x + p.offsetX * H,
+      pivotBaseGlTF.y + p.offsetZ * H,
+      pivotBaseGlTF.z + p.offsetFB * H,
+    );
+  }
   return p;
 }
 
-async function loadTransitionModels(sessionData) {
-  transitionRoot.clear();
-  bodyGroup = null;
-  hairPivot = null;
+function blenderToGlTF(pt) {
+  return new THREE.Vector3(pt[0], pt[2], -pt[1]);
+}
 
-  const [bodyGltf, hairGltf] = await Promise.all([
-    gltfLoader.loadAsync(sessionData.bodyGlbUrl),
-    gltfLoader.loadAsync(sessionData.hairGlbUrl),
-  ]);
+function gltfToBlender(vec) {
+  return [
+    Number(vec.x.toFixed(5)),
+    Number((-vec.z).toFixed(5)),
+    Number(vec.y.toFixed(5)),
+  ];
+}
 
+function rebuildMorphCatalog() {
+  morphTargetsByName = new Map();
+  const root = headGroup || bodyGroup;
+  if (!root) return;
+  root.traverse((obj) => {
+    if (!obj.isMesh || !obj.morphTargetDictionary || !obj.morphTargetInfluences) return;
+    for (const [name, index] of Object.entries(obj.morphTargetDictionary)) {
+      if (!morphTargetsByName.has(name)) morphTargetsByName.set(name, []);
+      morphTargetsByName.get(name).push({ mesh: obj, index });
+    }
+  });
+}
+
+function applyTransitionMorphPreview() {
+  for (const entries of morphTargetsByName.values()) {
+    for (const { mesh, index } of entries) mesh.morphTargetInfluences[index] = 0;
+  }
+  const selected = exprPreviewSelect.value;
+  const strength = Number(exprPreviewStrength.value) || 0;
+  exprPreviewVal.textContent = Math.round(strength * 100) + '%';
+  if (!selected || selected === 'neutral' || !morphTargetsByName.size) return;
+
+  const preset = COMBINED_PREVIEW_PRESETS[selected];
+  if (preset) {
+    for (const [k, w] of Object.entries(preset.keys)) {
+      for (const { mesh, index } of morphTargetsByName.get(k) || []) {
+        mesh.morphTargetInfluences[index] = w * strength;
+      }
+    }
+  } else {
+    for (const { mesh, index } of morphTargetsByName.get(selected) || []) {
+      mesh.morphTargetInfluences[index] = strength;
+    }
+  }
+}
+
+function populateExprPreviewSelect() {
+  exprPreviewSelect.replaceChildren();
+  exprPreviewSelect.append(new Option('中性（Neutral）', 'neutral'));
+  for (const [id, item] of Object.entries(COMBINED_PREVIEW_PRESETS)) {
+    if (Object.keys(item.keys).some((k) => morphTargetsByName.has(k))) {
+      exprPreviewSelect.append(new Option(item.label, id));
+    }
+  }
+  for (const name of morphTargetsByName.keys()) {
+    exprPreviewSelect.append(new Option(`单键：${name}`, name));
+  }
+  if (morphTargetsByName.size > 0) {
+    exprPreviewSelect.value = morphTargetsByName.has('EA_happy_eye') || morphTargetsByName.has('EA_happy_mouth')
+      ? 'happy'
+      : (morphTargetsByName.has('EA_blink') ? 'blink' : [...morphTargetsByName.keys()][0]);
+    exprPreviewStrength.value = '1';
+    exprPreviewBox.classList.add('show');
+    applyTransitionMorphPreview();
+  } else {
+    exprPreviewBox.classList.remove('show');
+  }
+}
+
+const CONTOUR_CURVES = [
+  {
+    keys: ['eyeInnerL', 'eyeUpper1L', 'eyeUpper2L', 'eyeUpperL', 'eyeUpper4L', 'eyeUpper5L', 'eyeOuterL', 'eyeLower5L', 'eyeLower4L', 'eyeLowerL', 'eyeLower2L', 'eyeLower1L'],
+    color: 0x2ee6d6,
+    closed: true,
+  },
+  {
+    keys: ['eyeInnerR', 'eyeUpper1R', 'eyeUpper2R', 'eyeUpperR', 'eyeUpper4R', 'eyeUpper5R', 'eyeOuterR', 'eyeLower5R', 'eyeLower4R', 'eyeLowerR', 'eyeLower2R', 'eyeLower1R'],
+    color: 0x2ee6d6,
+    closed: true,
+  },
+  {
+    keys: ['mouthCornerR', 'mouthUpperR2', 'mouthUpperR1', 'mouthUpper', 'mouthUpperL1', 'mouthUpperL2', 'mouthCornerL', 'mouthLowerL2', 'mouthLowerL1', 'mouthLower', 'mouthLowerR1', 'mouthLowerR2'],
+    color: 0xff7b54,
+    closed: true,
+  },
+  { keys: ['browInnerL', 'browMiddleL', 'browOuterL'], color: 0xffcf4a, closed: false },
+  { keys: ['browInnerR', 'browMiddleR', 'browOuterR'], color: 0xffcf4a, closed: false },
+];
+
+function setPinTab(tabKey) {
+  for (const btn of document.querySelectorAll('.pin-tab-btn')) {
+    btn.classList.toggle('active', btn.dataset.pintab === tabKey);
+  }
+  for (const pane of document.querySelectorAll('.pin-pane')) {
+    pane.classList.toggle('active', pane.dataset.pinpane === tabKey);
+  }
+}
+
+for (const btn of document.querySelectorAll('.pin-tab-btn')) {
+  btn.onclick = () => setPinTab(btn.dataset.pintab);
+}
+
+function updateFacePinVisuals() {
+  const headH = Number(currentSession?.data?.headMetrics?.height) || 0.2;
+  const pinRadius = Math.max(headH * 0.0056, 0.0011);
+  pinGroup.clear();
+  pinMeshes.clear();
+
+  for (const curve of CONTOUR_CURVES) {
+    const pts = curve.keys.map((k) => landmarksGlTF[k]).filter(Boolean);
+    if (pts.length < 2) continue;
+    const geom = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({
+      color: curve.color,
+      depthTest: false,
+      transparent: true,
+      opacity: 0.78,
+    });
+    const line = curve.closed ? new THREE.LineLoop(geom, mat) : new THREE.Line(geom, mat);
+    line.renderOrder = 998;
+    pinGroup.add(line);
+  }
+
+  for (const [key, pos] of Object.entries(landmarksGlTF)) {
+    const geom = new THREE.SphereGeometry(pinRadius, 12, 12);
+    const active = key === selectedPinKey;
+    const mat = new THREE.MeshBasicMaterial({
+      color: active ? 0xffffff : (PIN_COLORS[key] ?? 0xffffff),
+      depthTest: false,
+      transparent: true,
+      opacity: active ? 1.0 : 0.90,
+    });
+    const sphere = new THREE.Mesh(geom, mat);
+    sphere.renderOrder = active ? 1000 : 999;
+    sphere.userData.pinKey = key;
+    sphere.position.copy(pos);
+    sphere.scale.setScalar(active ? 1.7 : 1.0);
+    pinGroup.add(sphere);
+    pinMeshes.set(key, sphere);
+  }
+  pinGroup.visible = showPinsToggle.checked;
+}
+
+function initFacePins(faceLandmarks, originOffset = new THREE.Vector3()) {
+  for (const k of Object.keys(landmarksGlTF)) delete landmarksGlTF[k];
+  defaultLandmarksGlTF = {};
+  if (faceLandmarks) {
+    for (const [k, coords] of Object.entries(faceLandmarks)) {
+      const vec = blenderToGlTF(coords).sub(originOffset);
+      landmarksGlTF[k] = vec.clone();
+      defaultLandmarksGlTF[k] = vec.clone();
+    }
+  }
+  selectedPinKey = null;
+  for (const b of document.querySelectorAll('.pin-btn')) b.classList.remove('active');
+  updateFacePinVisuals();
+}
+
+function selectPinButton(key) {
+  selectedPinKey = selectedPinKey === key ? null : key;
+  for (const b of document.querySelectorAll('.pin-btn')) {
+    b.classList.toggle('active', b.dataset.pin === selectedPinKey);
+  }
+  if (selectedPinKey) {
+    const activeBtn = document.querySelector(`.pin-btn[data-pin="${selectedPinKey}"]`);
+    const paneKey = activeBtn?.closest('.pin-pane')?.dataset.pinpane;
+    if (paneKey) setPinTab(paneKey);
+    pinHint.textContent = `已选中「${activeBtn?.textContent || selectedPinKey}」，请在右侧 3D 脸上左键单击目标位置。`;
+    if (morphTargetsByName.size > 0) {
+      exprPreviewSelect.value = 'neutral';
+      applyTransitionMorphPreview();
+    }
+  } else {
+    pinHint.textContent = '可直接使用自动投射点位生成表情，或选中上方按钮后在 3D 脸上左键重定位。';
+  }
+  for (const [k, sphere] of pinMeshes.entries()) {
+    const active = k === selectedPinKey;
+    sphere.scale.setScalar(active ? 1.7 : 1.0);
+    sphere.renderOrder = active ? 1000 : 999;
+    sphere.material.color.setHex(active ? 0xffffff : (PIN_COLORS[k] ?? 0xffffff));
+    sphere.material.opacity = active ? 1.0 : 0.90;
+  }
+}
+
+for (const btn of document.querySelectorAll('.pin-btn')) {
+  btn.onclick = () => selectPinButton(btn.dataset.pin);
+}
+
+const raycaster = new THREE.Raycaster();
+let downPointer = null;
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  if (e.button === 0) downPointer = { x: e.clientX, y: e.clientY };
+});
+renderer.domElement.addEventListener('pointerup', (e) => {
+  const pickTarget = headGroup || bodyGroup;
+  if (e.button !== 0 || !downPointer || !pickTarget) return;
+  const dist = Math.hypot(e.clientX - downPointer.x, e.clientY - downPointer.y);
+  downPointer = null;
+  if (dist > 5) return;
+
+  const rect = renderer.domElement.getBoundingClientRect();
+  const ndc = new THREE.Vector2(
+    ((e.clientX - rect.left) / rect.width) * 2 - 1,
+    -((e.clientY - rect.top) / rect.height) * 2 + 1,
+  );
+  raycaster.setFromCamera(ndc, camera);
+
+  if (showPinsToggle.checked && pinMeshes.size > 0) {
+    const pinHits = raycaster.intersectObjects([...pinMeshes.values()], false);
+    if (pinHits.length && pinHits[0].object?.userData?.pinKey) {
+      const hitKey = pinHits[0].object.userData.pinKey;
+      if (hitKey !== selectedPinKey) {
+        selectPinButton(hitKey);
+        return;
+      }
+    }
+  }
+  if (!selectedPinKey) return;
+
+  const hits = raycaster.intersectObject(pickTarget, true);
+  if (!hits.length) return;
+
+  const localHit = headPivotGroup.worldToLocal(hits[0].point.clone());
+  landmarksGlTF[selectedPinKey] = localHit;
+  const mirrorKey = MIRROR_PAIRS[selectedPinKey];
+  if (mirrorPinsToggle.checked && mirrorKey) {
+    const worldCenterX = Number(currentSession?.data?.headMetrics?.center?.[0] ?? pivotBaseGlTF.x);
+    const localCenterX = worldCenterX - headPivotBaseGlTF.x;
+    const mirrorLocalX = 2 * localCenterX - localHit.x;
+    const H = Math.max(bodyBoundsGlTF.height, 0.2);
+    const originW = headPivotGroup.localToWorld(new THREE.Vector3(mirrorLocalX, localHit.y, localHit.z + H));
+    const targetW = headPivotGroup.localToWorld(new THREE.Vector3(mirrorLocalX, localHit.y, localHit.z - H));
+    const dirW = targetW.sub(originW).normalize();
+    raycaster.set(originW, dirW);
+    const mHits = raycaster.intersectObject(pickTarget, true);
+    landmarksGlTF[mirrorKey] = mHits.length
+      ? headPivotGroup.worldToLocal(mHits[0].point.clone())
+      : new THREE.Vector3(mirrorLocalX, localHit.y, localHit.z);
+  }
+  updateFacePinVisuals();
+});
+
+async function loadBodyScene(url) {
+  if (bodyGroup) {
+    transitionRoot.remove(bodyGroup);
+    bodyGroup = null;
+  }
+  if (!url) return null;
+  const bodyGltf = await gltfLoader.loadAsync(url);
   bodyGroup = bodyGltf.scene;
   transitionRoot.add(bodyGroup);
+  if (!headGroup) {
+    rebuildMorphCatalog();
+    populateExprPreviewSelect();
+  }
+  return bodyGroup;
+}
 
-  const box = new THREE.Box3().setFromObject(bodyGroup);
+async function loadHeadScene(url) {
+  if (headGroup) {
+    headPivotGroup.remove(headGroup);
+    headGroup = null;
+  }
+  if (!url) return null;
+  const headGltf = await gltfLoader.loadAsync(url);
+  headGroup = headGltf.scene;
+  headPivotGroup.add(headGroup);
+  rebuildMorphCatalog();
+  populateExprPreviewSelect();
+  return headGroup;
+}
+
+async function loadTransitionModels(sessionData) {
+  if (headGroup) {
+    headPivotGroup.remove(headGroup);
+    headGroup = null;
+  }
+  if (hairPivot) {
+    headPivotGroup.remove(hairPivot);
+    hairPivot = null;
+  }
+  exprPreviewBox.classList.remove('show');
+
+  const [, headGltf, hairGltf] = await Promise.all([
+    sessionData.bodyGlbUrl ? loadBodyScene(sessionData.bodyGlbUrl) : loadBodyScene(null),
+    sessionData.headGlbUrl ? gltfLoader.loadAsync(sessionData.headGlbUrl) : Promise.resolve(null),
+    sessionData.hairGlbUrl ? gltfLoader.loadAsync(sessionData.hairGlbUrl) : Promise.resolve(null),
+  ]);
+
+  if (headGltf) {
+    headGroup = headGltf.scene;
+    headPivotGroup.add(headGroup);
+  }
+
+  const box = bodyGroup ? new THREE.Box3().setFromObject(bodyGroup) : new THREE.Box3();
+  if (headGroup && sessionData.headPivot) {
+    headPivotBaseGlTF.copy(blenderToGlTF(sessionData.headPivot));
+    headPivotGroup.position.copy(headPivotBaseGlTF);
+    headPivotGroup.rotation.set(0, 0, 0);
+    headPivotGroup.scale.setScalar(1);
+    headPivotGroup.updateMatrixWorld(true);
+    box.expandByObject(headGroup);
+  } else {
+    headPivotBaseGlTF.set(0, 0, 0);
+    headPivotGroup.position.set(0, 0, 0);
+    headPivotGroup.rotation.set(0, 0, 0);
+    headPivotGroup.scale.setScalar(1);
+  }
+
   const size = new THREE.Vector3();
   const center = new THREE.Vector3();
   box.getSize(size);
   box.getCenter(center);
 
   const H = Math.max(size.y, Number(sessionData.bodyHeight) || 1.6);
-  bodyBoundsGlTF = { center, height: H, minY: box.min.y };
+  bodyBoundsGlTF = { center, height: H, headHeight: size.y, minY: box.min.y };
   groundMesh.position.y = box.min.y;
-  groundMesh.scale.setScalar(Math.max(H / 1.6, 0.5));
+  groundMesh.scale.setScalar(sessionData.headOnly ? Math.max(size.y * 1.6, 0.35) : Math.max(H / 1.6, 0.5));
 
   const [cx, cy, cz] = sessionData.craniumCenter;
-  pivotBaseGlTF.set(cx, cz, -cy);
+  pivotBaseGlTF.copy(blenderToGlTF([cx, cy, cz])).sub(headPivotBaseGlTF);
 
-  hairPivot = new THREE.Group();
-  hairPivot.add(hairGltf.scene);
-  transitionRoot.add(hairPivot);
+  if (hairGltf) {
+    hairPivot = new THREE.Group();
+    hairPivot.add(hairGltf.scene);
+    hairPivot.visible = !hideHairForPins.checked;
+    headPivotGroup.add(hairPivot);
+  }
 
+  rebuildMorphCatalog();
+  initFacePins(sessionData.faceLandmarks, headPivotBaseGlTF);
+  resetHeadSlidersToDefault();
   resetSlidersToDefault();
   applySlidersToViewport();
   setCameraPreset('head');
   setActiveTab('transition');
+}
+
+function resetHeadSlidersToDefault() {
+  headSliderScale.value = '1.00';
+  headSliderX.value = '0';
+  headSliderFB.value = '0';
+  headSliderZ.value = '0';
+  headRotZSelect.value = '0';
+  updateSliderReadouts();
 }
 
 function resetSlidersToDefault() {
@@ -1075,6 +1920,7 @@ function showResult(job) {
     ['文件大小', formatBytes(v.vrmBytes)],
     ['人形骨骼', `${v.mappedBoneCount ?? '-'} 根`],
     ['修补零权重', `${v.repairedUnweightedVerts ?? 0} 个`],
+    ['VRM 表情', Array.isArray(v.expressions) && v.expressions.length ? `${v.expressions.length} 个预设` : '无'],
     ['自动/微调缩放', `${ha.autoScale ?? '-'} × ${ha.userScaleMult ?? 1}`],
     ['微调偏移(X/前后/Z)', userOff],
     ['MToon 材质', `${v.inspect?.mtoon ?? '-'} 个`],
@@ -1164,8 +2010,14 @@ async function runFinalize({ switchToVrmOnComplete = false } = {}) {
         offsetX: p.offsetX,
         offsetFB: p.offsetFB,
         offsetZ: p.offsetZ,
+        headScaleMult: p.headScaleMult,
+        headOffsetX: p.headOffsetX,
+        headOffsetFB: p.headOffsetFB,
+        headOffsetZ: p.headOffsetZ,
+        headRotZ: p.headRotZ,
         targetHeight: Number(targetHeightInput.value || 1.6),
         author: authorInput.value.trim() || 'Charakuru Local Blender',
+        includeExpressions: includeExprInVrm.checked,
       }),
     });
     const data = await res.json();
@@ -1219,7 +2071,7 @@ function scheduleAutoFinalize(immediate = false) {
   }, immediate ? 80 : 600);
 }
 
-for (const slider of [sliderScale, sliderX, sliderFB, sliderZ]) {
+for (const slider of [sliderScale, sliderX, sliderFB, sliderZ, headSliderScale, headSliderX, headSliderFB, headSliderZ]) {
   slider.addEventListener('input', () => {
     applySlidersToViewport();
     if (currentSession) scheduleAutoFinalize(false);
@@ -1230,11 +2082,22 @@ for (const slider of [sliderScale, sliderX, sliderFB, sliderZ]) {
   });
 }
 
+headRotZSelect.addEventListener('change', () => {
+  applySlidersToViewport();
+  if (currentSession && autoApplyToggle.checked) scheduleAutoFinalize(true);
+});
+
 autoApplyToggle.addEventListener('change', () => {
   if (currentSession && autoApplyToggle.checked) {
     scheduleAutoFinalize(true);
   }
 });
+
+resetHeadAdjustBtn.onclick = () => {
+  resetHeadSlidersToDefault();
+  applySlidersToViewport();
+  if (currentSession && autoApplyToggle.checked) scheduleAutoFinalize(true);
+};
 
 resetAdjustBtn.onclick = () => {
   resetSlidersToDefault();
@@ -1260,30 +2123,173 @@ gotoVrmBtn.onclick = async () => {
   setActiveTab('vrm');
 };
 
+showPinsToggle.addEventListener('change', () => {
+  pinGroup.visible = showPinsToggle.checked;
+});
+
+hideHairForPins.addEventListener('change', () => {
+  if (hairPivot) hairPivot.visible = !hideHairForPins.checked;
+});
+
+resetPinsBtn.onclick = () => {
+  for (const [k, vec] of Object.entries(defaultLandmarksGlTF)) {
+    landmarksGlTF[k] = vec.clone();
+  }
+  selectedPinKey = null;
+  for (const b of document.querySelectorAll('.pin-btn')) b.classList.remove('active');
+  updateFacePinVisuals();
+  const count = Object.keys(landmarksGlTF).length;
+  pinHint.textContent = `已重置为自动投射的 ${count} 个默认五官轮廓点位。`;
+};
+
+exprPreviewSelect.addEventListener('change', applyTransitionMorphPreview);
+exprPreviewStrength.addEventListener('input', applyTransitionMorphPreview);
+
+generateExprBtn.onclick = async () => {
+  if (!currentSession || exprBusy || stagingBusy || finalizeInFlight) return;
+  const parts = [];
+  if (partEyesToggle.checked) parts.push('eyes');
+  if (partMouthToggle.checked) parts.push('mouth');
+  if (partBrowsToggle.checked) parts.push('brows');
+  if (!parts.length) {
+    setStatus('err', '请至少勾选一个需要生成的表情部位（眼睛 / 嘴巴 / 眉毛）。');
+    return;
+  }
+
+  exprBusy = true;
+  generateExprBtn.disabled = true;
+  clearDebounceTimer();
+  logDetails.classList.add('show');
+  setSyncPill('syncing', '正在生成面部表情…');
+  setStatus('run', `正在按当前 ${Object.keys(landmarksGlTF).length} 个五官轮廓点位生成眼/嘴/眉表情变形键…`);
+
+  try {
+    const blenderLandmarks = {};
+    for (const [k, vec] of Object.entries(landmarksGlTF)) {
+      blenderLandmarks[k] = gltfToBlender(vec.clone().add(headPivotBaseGlTF));
+    }
+    const res = await fetch('/api/body-hair/expressions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: currentSession.id,
+        landmarks: blenderLandmarks,
+        parts,
+      }),
+    });
+    const created = await res.json();
+    if (!res.ok) throw new Error(created.error || '提交表情生成任务失败');
+
+    const job = await pollFinalizeJob(created.id);
+    currentSession.data.exprBlend = job.result.exprBlend;
+    currentSession.data.exprTarget = job.result.exprTarget;
+    currentSession.data.exprGlbUrl = job.result.exprGlbUrl || job.result.bodyExprGlbUrl;
+    if (job.result.exprTarget === 'head') {
+      await loadHeadScene(`${currentSession.data.exprGlbUrl}?t=${Date.now()}`);
+    } else {
+      await loadBodyScene(`${currentSession.data.exprGlbUrl}?t=${Date.now()}`);
+    }
+    const dlGlbUrl = job.result.exprTarget === 'head'
+      ? `/api/body-hair/stage/${currentSession.id}/download/head-expr.glb`
+      : currentSession.data.exprGlbUrl;
+    downloadHeadExprGlb.href = dlGlbUrl;
+    downloadHeadExprGlb.download = `${currentSession.name}-expressions.glb`;
+    downloadHeadExprBlend.href = `/api/body-hair/stage/${currentSession.id}/download/staged-expr.blend`;
+    downloadHeadExprBlend.download = `${currentSession.name}-expressions.blend`;
+    headOnlyActions.classList.add('show');
+
+    setStatus('ok', `已生成 ${job.result.count} 组表情变形键（目标：${job.result.exprTarget === 'head' ? '独立高模头部' : '头身一体'}，嘴型模式：${job.result.mouthMode || '-'}），可在左侧试看。`);
+
+    if (!currentSession.data.headOnly && currentSession.data.hasBody && includeExprInVrm.checked && autoApplyToggle.checked) {
+      await runFinalize({ switchToVrmOnComplete: false });
+    } else if (currentSession.data.headOnly) {
+      setSyncPill('ok', `纯头部表情已生成（${job.result.mouthMode || '-'}）`);
+    } else {
+      setSyncPill('pending', '表情已生成，点击导出以更新 VRM');
+    }
+  } catch (err) {
+    setStatus('err', err.message || String(err));
+    setSyncPill('err', '表情生成失败');
+    logDetails.open = true;
+  } finally {
+    exprBusy = false;
+    generateExprBtn.disabled = false;
+  }
+};
+
+openExprLabBtn.onclick = async () => {
+  if (!currentSession) return;
+  openExprLabBtn.disabled = true;
+  setStatus('run', '正在初始化或启动 Expression Lab 四视图对比页面…');
+  try {
+    const res = await fetch('/api/body-hair/expression-lab', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: currentSession.id }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '启动 Expression Lab 失败');
+    setStatus('ok', `Expression Lab 对比视图已就绪：${data.url}`);
+    window.open(data.url, '_blank', 'noopener');
+  } catch (err) {
+    setStatus('err', err.message || String(err));
+  } finally {
+    openExprLabBtn.disabled = false;
+  }
+};
+
+includeExprInVrm.addEventListener('change', () => {
+  if (currentSession?.data?.exprBlend && !currentSession.data.headOnly && autoApplyToggle.checked) {
+    scheduleAutoFinalize(true);
+  }
+});
+
 stageBtn.onclick = async () => {
-  if (stagingBusy || finalizeInFlight) return;
+  if (stagingBusy || finalizeInFlight || exprBusy) return;
   const bodyFile = bodyInput.files?.[0];
+  const headFile = headInput.files?.[0];
   const hairFile = hairInput.files?.[0];
-  if (!bodyFile || !hairFile) {
-    setStatus('err', '请先同时选择“身体模型”和“头发模型”。');
+  if (!bodyFile && !headFile) {
+    setStatus('err', '请先选择“身体模型”，或仅选择“独立高模头部”进入纯头部测试模式。');
+    return;
+  }
+  if (!bodyFile && hairFile) {
+    setStatus('err', '仅测头部模式请勿单独上传头发；如需装配头发请同时上传身体模型。');
+    return;
+  }
+  if (bodyFile && !headFile && !hairFile) {
+    setStatus('err', '已选择身体模型，请至少再选择“独立高模头部”或“头发模型”。');
     return;
   }
 
   stagingBusy = true;
   stageBtn.disabled = true;
-  clearTimeout(debounceTimer);
-  debounceTimer = null;
+  clearDebounceTimer();
   pendingFinalize = false;
   resultCard.classList.remove('show');
+  headAdjustPanel.classList.remove('show');
+  adjustPanel.classList.remove('show');
+  exportActionBar.classList.remove('show');
+  exprPanel.classList.remove('show');
+  headOnlyActions.classList.remove('show');
   logDetails.classList.add('show');
   logBox.textContent = '';
   setSyncPill('syncing', '正在准备过渡窗口…');
-  setStatus('run', '正在上传模型并执行自动头型拟合…');
+  if (!bodyFile && headFile) {
+    setStatus('run', autoSurgeryToggle.checked
+      ? '正在上传独立头部并执行自动局部开刀（分眼眶/睫毛/唇缝/口腔）…'
+      : '正在上传独立头部并准备纯头部测试窗口…');
+  } else {
+    setStatus('run', headFile ? '正在上传身体、高模头部与头发并执行接颈装配…' : '正在上传模型并执行自动头型拟合…');
+  }
 
   try {
     const fd = new FormData();
-    fd.append('body', bodyFile);
-    fd.append('hair', hairFile);
+    if (bodyFile) fd.append('body', bodyFile);
+    if (headFile) fd.append('head', headFile);
+    if (hairFile) fd.append('hair', hairFile);
+    fd.append('trimBodyHead', trimBodyHeadToggle.checked ? 'true' : 'false');
+    fd.append('autoSurgery', autoSurgeryToggle.checked ? 'true' : 'false');
     if (modelNameInput.value.trim()) fd.append('name', modelNameInput.value.trim());
 
     const res = await fetch('/api/body-hair/stage', { method: 'POST', body: fd });
@@ -1293,11 +2299,37 @@ stageBtn.onclick = async () => {
     const readySession = await pollStage(created.id);
     currentSession = readySession;
     await loadTransitionModels(readySession.data);
-    adjustPanel.classList.add('show');
-    setStatus('ok', '过渡调整窗口已就绪！可拖拽滑块缩放/平移头发，右侧将实时显示并自动更新 VRM。');
-    setSyncPill('pending', '正在生成初始 VRM 预览…');
 
-    runFinalize({ switchToVrmOnComplete: false });
+    const isHeadOnly = Boolean(readySession.data.headOnly || !readySession.data.hasBody);
+    const surgeryPartsCount = Array.isArray(readySession.data.surgeryParts) ? readySession.data.surgeryParts.length : 0;
+
+    headAdjustPanel.classList.toggle('show', Boolean(!isHeadOnly && readySession.data.hasHead));
+    adjustPanel.classList.toggle('show', Boolean(!isHeadOnly && readySession.data.hasHair));
+    exportActionBar.classList.toggle('show', !isHeadOnly);
+    includeExprInVrm.closest('label').style.display = isHeadOnly ? 'none' : 'flex';
+    hideHairForPins.closest('label').style.display = readySession.data.hasHair ? 'flex' : 'none';
+    exprPanel.classList.add('show');
+
+    const partsLabel = surgeryPartsCount > 0 ? `已开刀 ${surgeryPartsCount} 部件 · ` : '';
+    exprTargetBadge.textContent = isHeadOnly
+      ? `纯头部测试 · ${partsLabel}${readySession.data.faceVertCount ?? '-'} 顶点`
+      : (readySession.data.hasHead
+        ? `独立头部 · ${partsLabel}${readySession.data.faceVertCount ?? '-'} 顶点`
+        : `头身一体 · ${readySession.data.faceVertCount ?? '-'} 顶点`);
+
+    if (isHeadOnly) {
+      downloadHeadExprGlb.href = `/api/body-hair/stage/${readySession.id}/download/head.glb`;
+      downloadHeadExprGlb.download = `${readySession.name}-head.glb`;
+      downloadHeadExprBlend.href = `/api/body-hair/stage/${readySession.id}/download/staged.blend`;
+      downloadHeadExprBlend.download = `${readySession.name}-staged.blend`;
+      headOnlyActions.classList.add('show');
+      setStatus('ok', '纯头部测试场景已就绪！请确认 42 个五官轮廓点位置后，点击“生成表情并同步到预览”。');
+      setSyncPill('ok', surgeryPartsCount > 0 ? `纯头部开刀完成 (${surgeryPartsCount} 部件)` : '纯头部测试模式就绪');
+    } else {
+      setStatus('ok', '过渡调整窗口已就绪！可拖拽滑块微调头部/头发，或标定五官后点击“生成表情并同步到预览”。');
+      setSyncPill('pending', '正在生成初始 VRM 预览…');
+      runFinalize({ switchToVrmOnComplete: false });
+    }
   } catch (err) {
     setStatus('err', err.message || String(err));
     setSyncPill('err', '过渡场景加载失败');
